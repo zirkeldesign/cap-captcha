@@ -26,7 +26,7 @@ The `assets/js/vendor/cap-widget.*` and `assets/wasm/cap_wasm_bg.wasm` files are
 2. Go to **Settings → Privacy CAPTCHA for Cap**.
 3. Enter your Cap *endpoint base URL* (e.g. `https://cap.example.com/`), *site key*, and *secret key*. Optionally define `CAP_CAPTCHA_SECRET_KEY` in `wp-config.php` to keep the secret out of `wp_options`.
 4. Pick a default *display mode*: inline, floating, or programmatic.
-5. Pick a *WASM source*: bundled (default, DSGVO-clean), Cap server, or jsdelivr CDN.
+5. Pick a *WASM source*: bundled (default, DSGVO-clean) or your own Cap server. Either way the file is served from your own infrastructure — no third-party CDN.
 6. Tick the integrations you want enabled.
 
 ## Display modes
@@ -46,6 +46,7 @@ The Gravity Forms field has a *Display mode* setting that overrides the global d
 - `cap_captcha_programmatic_src` — override the URL of `assets/js/programmatic.js`.
 - `cap_captcha_style_src` — override the front-end stylesheet URL. Return `''` to disable the bundled styles entirely.
 - `cap_captcha_wasm_url` — override the URL the widget loads its WASM bundle from (sets `window.CAP_CUSTOM_WASM_URL`). Default is whatever the *WASM source* setting resolves to.
+- `cap_captcha_pako_url` — override the URL the widget loads the `pako` decompression library from (sets `window.CAP_PAKO_URL`). Only fetched by older browsers lacking the native `DecompressionStream` API. Default: `assets/js/vendor/pako_inflate.min.js`.
 - `cap_captcha_i18n` — override the `data-cap-i18n-*` strings used on `<cap-widget>`. Accepts an `array<string,string>`.
 - `cap_captcha_floating_button_classes` — override the CSS classes on the floating-mode trigger button.
 - `cap_captcha_floating_position` — `top` (default) or `bottom`. Position of the floating popover relative to the trigger button.

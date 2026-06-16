@@ -12,9 +12,9 @@ All notable changes to this project will be documented in this file.
 - **Registration** integration (`register_form` + `registration_errors`).
 - **WooCommerce checkout** integration (auto-detected, only loads when WC is active).
 - **Programmatic display mode** — auto-solves the challenge in the background, no user interaction.
-- **WASM source** setting (bundled / Cap server / jsdelivr) with bundled as the default.
+- **WASM source** setting (bundled / your own Cap server) with bundled as the default — both served from your own infrastructure.
 - **Fail-open** behavior toggle for resilience during Cap-server outages.
 - **`CAP_CAPTCHA_SECRET_KEY`** constant override so the secret can live in `wp-config.php`.
-- Bundled `@cap.js/wasm@0.0.7` so the WebAssembly module is served from the plugin, not jsdelivr.
+- Fully self-hosted front-end assets: bundled `@cap.js/wasm@0.0.7` plus the `pako` decompression library and the cap-widget script, all served from the plugin. The jsdelivr fallback URLs baked into the upstream widget bundle are stripped at build time and the plugin sets `window.CAP_PAKO_URL` / `window.CAP_CUSTOM_WASM_URL` to local copies, so no third-party CDN is contacted at runtime.
 - German (`de_DE`) translations for the new settings strings.
 - Architecture refactor: shared `Asset\Renderer`, `Asset\Enqueuer`, `Verification\TokenVerifier`, and an `Integration\Integration` contract.

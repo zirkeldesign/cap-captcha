@@ -14,6 +14,7 @@
   },
   "devDependencies": {
     "@cap.js/wasm": "^0.0.7",
-    "cap-widget": "^0.1.56"
+    "cap-widget": "^0.1.56",
+    "pako": "^2.1.0"
   }
 }

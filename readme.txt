@@ -24,7 +24,7 @@ Unlike third-party CAPTCHAs (reCAPTCHA, hCaptcha, Turnstile), Cap runs the proof
 * **WordPress comments, wp-login, registration** integrations — togglable from one settings page.
 * **WooCommerce checkout** integration — only loads when WooCommerce is active.
 * **Three display modes**: inline widget, floating popover, or fully programmatic (auto-solves silently).
-* **Bundled WASM** — the proof-of-work WebAssembly module ships inside the plugin (`assets/wasm/cap_wasm_bg.wasm`), so no jsdelivr or other CDN is contacted at runtime. DSGVO/GDPR-clean by default.
+* **Fully self-hosted assets** — the proof-of-work WebAssembly module, the cap-widget script, and the pako decompression library all ship inside the plugin and are served locally, so no jsdelivr or other third-party CDN is contacted at runtime. DSGVO/GDPR-clean by default.
 * **WP 6.5+ native script-module API** for proper ES-module loading.
 * **i18n-ready** with German translations bundled.
 * **Theme-friendly CSS** built on Gravity Forms Orbital tokens with `--cap-captcha-*` overrides.
@@ -57,7 +57,7 @@ You provision those in your self-hosted Cap server. See the Cap documentation at
 
 = Where is the WASM loaded from? =
 
-By default: from the copy bundled inside this plugin at `wp-content/plugins/privacy-captcha-for-cap/assets/wasm/cap_wasm_bg.wasm`. You can switch to your Cap server's own `/assets/cap_wasm_bg.wasm` endpoint or to the upstream jsdelivr CDN under **Settings → Privacy CAPTCHA for Cap → Privacy**.
+By default: from the copy bundled inside this plugin at `wp-content/plugins/privacy-captcha-for-cap/assets/wasm/cap_wasm_bg.wasm`. You can optionally switch to your own Cap server's `/assets/cap_wasm_bg.wasm` endpoint under **Settings → Privacy CAPTCHA for Cap → Privacy**. Either way the file is served from your own infrastructure — no third-party CDN is contacted.
 
 = Why is a `.wasm` file bundled, and where does it come from? =
 
@@ -75,7 +75,7 @@ When enabled, the plugin lets submissions through if the Cap server is unreachab
 
 = Does the bundled `cap-widget` script make any external requests? =
 
-It loads `pako` from jsdelivr in the current upstream build. There's no override hook for that yet ([cap#56](https://github.com/tiagozip/cap/issues/56)). For full air-gap, ship your own custom widget build via the `cap_captcha_widget_src` filter.
+No third-party CDN requests. All widget assets are bundled and served from this plugin, including the `pako` decompression library (`assets/js/vendor/pako_inflate.min.js`), which older browsers without the native `DecompressionStream` API load locally instead of from jsdelivr. The only network requests the widget makes are to your own Cap endpoint to fetch and verify challenges.
 
 == Changelog ==
 
@@ -83,7 +83,7 @@ It loads `pako` from jsdelivr in the current upstream build. There's no override
 * Initial release.
 * Gravity Forms field (inline / floating / programmatic display).
 * Comments, login, registration, WooCommerce integrations.
-* Bundled WASM and cap-widget assets — DSGVO-clean by default.
+* Fully self-hosted assets — WASM module, cap-widget script, and pako library all bundled and served locally; no third-party CDN is contacted at runtime. DSGVO-clean by default.
 * WP 6.5 native script-module loading.
-* Top-level Settings → Privacy CAPTCHA for Cap page with integration toggles, WASM source choice, fail-open switch.
+* Top-level Settings → Privacy CAPTCHA for Cap page with integration toggles, WASM source choice (this plugin or your own Cap server), fail-open switch.
 * German translations.

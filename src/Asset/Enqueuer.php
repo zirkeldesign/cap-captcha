@@ -125,6 +125,12 @@ final class Enqueuer
         if ($wasmUrl !== '') {
             $globals['CAP_CUSTOM_WASM_URL'] = $wasmUrl;
         }
+
+        $pakoDefault = CAP_CAPTCHA_URL.'assets/js/vendor/pako_inflate.min.js';
+        $pakoUrl = (string) apply_filters('cap_captcha_pako_url', $pakoDefault);
+        if ($pakoUrl !== '') {
+            $globals['CAP_PAKO_URL'] = $pakoUrl;
+        }
         if ($this->settings->isProgrammatic()) {
             $endpoint = $this->settings->getWidgetEndpoint();
             if ($endpoint !== '') {

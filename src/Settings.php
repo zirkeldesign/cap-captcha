@@ -24,8 +24,6 @@ class Settings
 
     public const WASM_CAP_SERVER = 'cap_server';
 
-    public const WASM_JSDELIVR = 'jsdelivr';
-
     public const INTEGRATIONS = ['gravity_forms', 'comments', 'login', 'registration', 'woocommerce'];
 
     private static ?Settings $instance = null;
@@ -157,7 +155,7 @@ class Settings
         }
 
         $wasm = (string) ($input['wasm_source'] ?? self::WASM_BUNDLED);
-        if (! in_array($wasm, [self::WASM_BUNDLED, self::WASM_CAP_SERVER, self::WASM_JSDELIVR], true)) {
+        if (! in_array($wasm, [self::WASM_BUNDLED, self::WASM_CAP_SERVER], true)) {
             $wasm = self::WASM_BUNDLED;
         }
 
@@ -365,10 +363,6 @@ class Settings
                                 <label>
                                     <input type="radio" name="<?php echo esc_attr(self::OPTION_KEY); ?>[wasm_source]" value="<?php echo esc_attr(self::WASM_CAP_SERVER); ?>" <?php checked($v['wasm_source'], self::WASM_CAP_SERVER); ?>>
                                     <?php echo esc_html__('Cap server — load from your endpoint at /assets/cap_wasm_bg.wasm', 'privacy-captcha-for-cap'); ?>
-                                </label><br>
-                                <label>
-                                    <input type="radio" name="<?php echo esc_attr(self::OPTION_KEY); ?>[wasm_source]" value="<?php echo esc_attr(self::WASM_JSDELIVR); ?>" <?php checked($v['wasm_source'], self::WASM_JSDELIVR); ?>>
-                                    <?php echo esc_html__('jsdelivr CDN — fastest globally, but leaks visitor IPs to a third party', 'privacy-captcha-for-cap'); ?>
                                 </label>
                             </fieldset>
                         </td>
@@ -820,7 +814,6 @@ class Settings
             self::WASM_CAP_SERVER => $this->getEndpointBase() === ''
                 ? ''
                 : $this->getEndpointBase().'assets/cap_wasm_bg.wasm',
-            self::WASM_JSDELIVR => '',
             default => CAP_CAPTCHA_URL.'assets/wasm/cap_wasm_bg.wasm',
         };
     }
