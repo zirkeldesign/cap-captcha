@@ -29,5 +29,5 @@ jobs:
         env:
           SVN_USERNAME: ${{ secrets.WPORG_SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.WPORG_SVN_PASSWORD }}
-          SLUG: cap-captcha
-          BUILD_DIR: ./
+          SLUG: privacy-captcha-for-cap
+          GENERATE_ZIP: true
