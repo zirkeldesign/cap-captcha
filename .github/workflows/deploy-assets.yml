@@ -2,7 +2,8 @@ name: Deploy plugin assets to WordPress.org
 
 # Pushes the icon / banner / screenshots in .wordpress-org/assets to the
 # plugin's SVN `assets/` directory. This is independent of the plugin code
-# and does NOT require a version bump or a release.
+# and does NOT require a version bump or a release. Uses plain SVN so it
+# never touches trunk/ or tags/.
 
 on:
   push:
@@ -19,13 +20,50 @@ jobs:
     name: Deploy assets to WordPress.org
     runs-on: ubuntu-latest
 
+    env:
+      SLUG: privacy-captcha-for-cap
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: WordPress.org plugin asset update
-        uses: 10up/action-wordpress-plugin-asset-update@stable
+      - name: Install Subversion
+        run: sudo apt-get update && sudo apt-get install -y subversion
+
+      - name: Sync assets to WordPress.org SVN
         env:
           SVN_USERNAME: ${{ secrets.WPORG_SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.WPORG_SVN_PASSWORD }}
-          SLUG: privacy-captcha-for-cap
-          ASSETS_DIR: .wordpress-org/assets
+        run: |
+          set -euo pipefail
+
+          svn checkout "https://plugins.svn.wordpress.org/${SLUG}/assets" svn-assets
+
+          # Copy only the files WordPress.org uses (icon + banners). The .svg
+          # banner source stays in the repo but is not deployed.
+          cp .wordpress-org/assets/icon.svg \
+             .wordpress-org/assets/icon-256x256.png \
+             .wordpress-org/assets/icon-128x128.png \
+             .wordpress-org/assets/banner-772x250.png \
+             .wordpress-org/assets/banner-1544x500.png \
+             svn-assets/
+
+          cd svn-assets
+
+          # Stage any new files (already-versioned ones are skipped).
+          svn add --force . >/dev/null
+
+          # Make sure WordPress.org serves the right content types.
+          svn propset svn:mime-type image/png *.png >/dev/null 2>&1 || true
+          svn propset svn:mime-type image/svg+xml icon.svg >/dev/null 2>&1 || true
+
+          svn status
+
+          if svn status -q | grep -q .; then
+            svn commit \
+              -m "Update plugin directory assets (icon + banner)" \
+              --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+              --non-interactive --no-auth-cache \
+              --config-option servers:global:store-plaintext-passwords=no
+          else
+            echo "No asset changes to commit."
+          fi
