@@ -1,0 +1,31 @@
+name: Deploy plugin assets to WordPress.org
+
+# Pushes the icon / banner / screenshots in .wordpress-org/assets to the
+# plugin's SVN `assets/` directory. This is independent of the plugin code
+# and does NOT require a version bump or a release.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.wordpress-org/assets/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  assets:
+    name: Deploy assets to WordPress.org
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: WordPress.org plugin asset update
+        uses: 10up/action-wordpress-plugin-asset-update@stable
+        env:
+          SVN_USERNAME: ${{ secrets.WPORG_SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.WPORG_SVN_PASSWORD }}
+          SLUG: privacy-captcha-for-cap
+          ASSETS_DIR: .wordpress-org/assets
