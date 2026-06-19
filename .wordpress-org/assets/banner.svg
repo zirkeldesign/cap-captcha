@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 772 250">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d7d74"/>
+      <stop offset="100%" stop-color="#4ade80"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="772" height="250" fill="url(#g)"/>
+
+  <!-- Faint proof-of-work / hash motif (left) -->
+  <g font-family="'Monaco', 'Courier New', monospace" font-size="17" fill="white" opacity="0.18">
+    <text x="44" y="78">sha-256 · proof-of-work</text>
+    <text x="44" y="108">0x8f3a1c · nonce 49213</text>
+    <text x="44" y="138">00009b7e4c1d6a2f8e0b</text>
+    <text x="44" y="168">challenge → solve → ✓</text>
+  </g>
+
+  <!-- Centre shield badge -->
+  <circle cx="330" cy="125" r="64" fill="white" opacity="0.12"/>
+  <path d="M 330 86 L 366 99 L 366 134 C 366 157 349 172 330 179 C 311 172 294 157 294 134 L 294 99 Z" fill="white"/>
+  <path d="M 314 133 L 326 146 L 348 119" stroke="#0d7d74" stroke-width="9" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Title (right) -->
+  <text x="430" y="116" font-family="'Helvetica Neue', Arial, sans-serif" font-size="36" font-weight="bold" fill="white">Privacy CAPTCHA</text>
+  <text x="432" y="152" font-family="'Helvetica Neue', Arial, sans-serif" font-size="23" fill="white" opacity="0.9">for Cap</text>
+</svg>

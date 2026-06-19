@@ -1,6 +1,7 @@
 # Hidden directories
 .git
 .github
+.wordpress-org
 .idea
 .vscode
 .phpactor.json
