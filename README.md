@@ -39,8 +39,33 @@ The `assets/js/vendor/cap-widget.*` and `assets/wasm/cap_wasm_bg.wasm` files are
 
 The Gravity Forms field has a *Display mode* setting that overrides the global default per field.
 
+## Protected surfaces
+
+Each surface is an independent on/off toggle in **Settings → Privacy CAPTCHA for Cap → Integrations**, and the id below is the `$context` passed to the protection filters:
+
+| Context | Surface |
+| --- | --- |
+| `gravity_forms` | Gravity Forms field |
+| `contact_form_7` | Contact Form 7 forms |
+| `comments` | WordPress comment form |
+| `login` | wp-login.php / `login_form` |
+| `registration` | WordPress registration |
+| `woocommerce_checkout` | WooCommerce checkout |
+| `woocommerce_login` | WooCommerce My Account login |
+| `woocommerce_registration` | WooCommerce My Account registration |
+| `woocommerce_lost_password` | WooCommerce My Account lost password |
+
+## Form placement (Gravity Forms & Contact Form 7)
+
+Beyond the on/off surface toggle, the two form plugins offer placement control (Settings → Form placement), so a CAPTCHA can be kept off legally required or accessibility-sensitive forms:
+
+- **Contact Form 7** — *Automatic* protects every form (add the `[cap_captcha]` form-tag for custom placement, or `cap_captcha: off` in a form's Additional Settings to skip it); *Manual* protects only forms containing the `[cap_captcha]` tag. Verification is scoped to the same set, so an unprotected form is never blocked.
+- **Gravity Forms** — add the "Privacy CAPTCHA for Cap" field for precise placement, and/or enable "protect all Gravity Forms" globally. Each form has a **Default / Always / Never** override in its settings; an auto-protected form without the field gets a synthetic `cap_captcha` field injected at runtime.
+
 ## Filter hooks
 
+- `cap_captcha_protect` — master gate for **every** surface. `($enabled, $context)` → bool. Runs before the widget renders and before a submission is verified, so it controls all situations. Example: `add_filter('cap_captcha_protect', fn($on, $ctx) => is_user_logged_in() ? false : $on, 10, 2);`
+- `cap_captcha_protect_{context}` — per-surface gate, e.g. `cap_captcha_protect_woocommerce_login`. `($enabled)` → bool. Runs after the master filter. (For `gravity_forms` this is evaluated at load time, so add the filter before the plugin boots.)
 - `cap_captcha_widget_src` — override the URL the `cap-widget` ES module is loaded from. Default: `assets/js/vendor/cap-widget.js`.
 - `cap_captcha_floating_src` — override the URL of `cap-widget.floating.js`.
 - `cap_captcha_programmatic_src` — override the URL of `assets/js/programmatic.js`.

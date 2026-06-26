@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ZirkelDesign\CapCaptcha;
 
 use ZirkelDesign\CapCaptcha\Status\StatsClient;
+use ZirkelDesign\CapCaptcha\Status\StatusPanel;
 
 class Settings
 {
@@ -24,7 +25,25 @@ class Settings
 
     public const WASM_CAP_SERVER = 'cap_server';
 
-    public const INTEGRATIONS = ['gravity_forms', 'comments', 'login', 'registration', 'woocommerce'];
+    public const CF7_AUTOMATIC = 'automatic';
+
+    public const CF7_MANUAL = 'manual';
+
+    /**
+     * Every protectable surface/context. Each is an independent on/off toggle
+     * and the `$context` passed to the `cap_captcha_protect` filter.
+     */
+    public const SURFACES = [
+        'gravity_forms',
+        'contact_form_7',
+        'comments',
+        'login',
+        'registration',
+        'woocommerce_checkout',
+        'woocommerce_login',
+        'woocommerce_registration',
+        'woocommerce_lost_password',
+    ];
 
     private static ?Settings $instance = null;
 
@@ -161,8 +180,15 @@ class Settings
 
         $integrations = [];
         $rawIntegrations = is_array($input['integrations'] ?? null) ? $input['integrations'] : [];
-        foreach (self::INTEGRATIONS as $id) {
+        foreach (self::SURFACES as $id) {
             $integrations[$id] = ! empty($rawIntegrations[$id]);
+        }
+        // WooCommerce master toggle (gates the four woocommerce_* sub-surfaces).
+        $integrations['woocommerce'] = ! empty($rawIntegrations['woocommerce']);
+
+        $cf7Mode = (string) ($input['cf7_mode'] ?? self::CF7_AUTOMATIC);
+        if (! in_array($cf7Mode, [self::CF7_AUTOMATIC, self::CF7_MANUAL], true)) {
+            $cf7Mode = self::CF7_AUTOMATIC;
         }
 
         // Disabled inputs aren't submitted; keep the existing stored values so
@@ -192,6 +218,8 @@ class Settings
             'fail_open' => ! empty($input['fail_open']),
             'show_admin_notices' => ! empty($input['show_admin_notices']),
             'integrations' => $integrations,
+            'cf7_mode' => $cf7Mode,
+            'gf_protect_all' => ! empty($input['gf_protect_all']),
         ];
     }
 
@@ -373,29 +401,7 @@ class Settings
                 <?php foreach ($this->integrationGroups() as $group) { ?>
                     <h3 class="cap-captcha-integrations__heading"><?php echo esc_html($group['label']); ?></h3>
                     <p class="description cap-captcha-integrations__description"><?php echo esc_html($group['description']); ?></p>
-                    <div class="cap-captcha-integrations__grid">
-                        <?php foreach ($group['items'] as $id => $meta) { ?>
-                            <label class="cap-captcha-integration <?php echo $meta['available'] ? '' : 'cap-captcha-integration--disabled'; ?>">
-                                <input
-                                    type="checkbox"
-                                    class="cap-captcha-integration__toggle"
-                                    name="<?php echo esc_attr(self::OPTION_KEY); ?>[integrations][<?php echo esc_attr($id); ?>]"
-                                    value="1"
-                                    <?php checked(! empty($v['integrations'][$id])); ?>
-                                    <?php disabled(! $meta['available']); ?>
-                                >
-                                <span class="cap-captcha-integration__body">
-                                    <strong class="cap-captcha-integration__name"><?php echo esc_html($meta['label']); ?></strong>
-                                    <?php if ($meta['description'] !== '') { ?>
-                                        <span class="cap-captcha-integration__hint"><?php echo esc_html($meta['description']); ?></span>
-                                    <?php } ?>
-                                    <?php if (! $meta['available']) { ?>
-                                        <span class="cap-captcha-integration__status"><?php echo esc_html__('Plugin not active', 'privacy-captcha-for-cap'); ?></span>
-                                    <?php } ?>
-                                </span>
-                            </label>
-                        <?php } ?>
-                    </div>
+                    <?php $this->renderIntegrationCards($group, $v); ?>
                 <?php } ?>
 
                 <h2><?php echo esc_html__('Behavior', 'privacy-captcha-for-cap'); ?></h2>
@@ -447,23 +453,6 @@ class Settings
             return;
         }
 
-        $name = (string) ($stats['key']['name'] ?? '');
-        $siteKey = (string) ($stats['key']['siteKey'] ?? '');
-        $config = is_array($stats['key']['config'] ?? null) ? $stats['key']['config'] : [];
-        $difficulty = (int) ($config['difficulty'] ?? 0);
-        $challengeCount = (int) ($config['challengeCount'] ?? 0);
-        $saltSize = (int) ($config['saltSize'] ?? 0);
-
-        $current = is_array($stats['stats'] ?? null) ? $stats['stats'] : [];
-        $prev = is_array($stats['prevStats'] ?? null) ? $stats['prevStats'] : [];
-
-        $challenges = (int) ($current['challenges'] ?? 0);
-        $verified = (int) ($current['verified'] ?? 0);
-        $failed = (int) ($current['failed'] ?? 0);
-        $avgLatencyMs = (int) ($current['avgLatency'] ?? 0);
-
-        $buckets = is_array($stats['chartData']['data'] ?? null) ? $stats['chartData']['data'] : [];
-
         $refreshUrl = wp_nonce_url(
             add_query_arg('cap_captcha_refresh', '1'),
             'cap_captcha_refresh'
@@ -471,161 +460,19 @@ class Settings
 
         ?>
         <div class="cap-captcha-status">
-            <div class="cap-captcha-status__grid">
-                <div class="cap-captcha-status__card">
-                    <span class="cap-captcha-status__label"><?php echo esc_html__('Site', 'privacy-captcha-for-cap'); ?></span>
-                    <strong class="cap-captcha-status__value"><?php echo esc_html($name !== '' ? $name : $siteKey); ?></strong>
-                    <?php if ($name !== '') { ?>
-                        <code class="cap-captcha-status__sub"><?php echo esc_html($siteKey); ?></code>
-                    <?php } ?>
-                </div>
-                <?php
-                $this->renderStatCard(
-                    __('Challenges', 'privacy-captcha-for-cap'),
-                    number_format_i18n($challenges),
-                    $challenges,
-                    (int) ($prev['challenges'] ?? 0),
-                );
-        $this->renderStatCard(
-            __('Verified', 'privacy-captcha-for-cap'),
-            number_format_i18n($verified),
-            $verified,
-            (int) ($prev['verified'] ?? 0),
-        );
-        $this->renderStatCard(
-            __('Failed', 'privacy-captcha-for-cap'),
-            number_format_i18n($failed),
-            $failed,
-            (int) ($prev['failed'] ?? 0),
-        );
-        $this->renderStatCard(
-            __('Avg. duration', 'privacy-captcha-for-cap'),
-            /* translators: %s is the latency in seconds with one decimal, e.g. "3.4 s" */
-            sprintf(esc_html__('%s s', 'privacy-captcha-for-cap'), number_format_i18n($avgLatencyMs / 1000, 1)),
-            $avgLatencyMs,
-            (int) ($prev['avgLatency'] ?? 0),
-        );
-        ?>
-                <div class="cap-captcha-status__card">
-                    <span class="cap-captcha-status__label"><?php echo esc_html__('Difficulty', 'privacy-captcha-for-cap'); ?></span>
-                    <strong class="cap-captcha-status__value"><?php echo esc_html((string) $difficulty); ?></strong>
-                    <span class="cap-captcha-status__sub">
-                        <?php echo esc_html(sprintf(
-                            /* translators: 1: challenge count, 2: salt size in bytes */
-                            __('%1$d challenges · %2$d-byte salt', 'privacy-captcha-for-cap'),
-                            $challengeCount,
-                            $saltSize
-                        )); ?>
-                    </span>
-                </div>
-            </div>
-
-            <?php if ($buckets !== []) { ?>
-                <?php $this->renderSparkline($buckets); ?>
-            <?php } ?>
-
+            <?php (new StatusPanel)->render($stats); ?>
             <p class="cap-captcha-status__refresh">
                 <a class="button" href="<?php echo esc_url($refreshUrl); ?>"><?php echo esc_html__('Refresh now', 'privacy-captcha-for-cap'); ?></a>
                 <span class="description"><?php echo esc_html__('Status is cached for 5 minutes.', 'privacy-captcha-for-cap'); ?></span>
             </p>
         </div>
-
         <?php
-    }
-
-    /**
-     * Single headline stat card with optional trend % vs the previous period.
-     * Colour follows direction: up = green, down = red. The arrow and colour
-     * just reflect numeric change — they don't try to be clever about whether
-     * "going up" is semantically good for the metric.
-     */
-    private function renderStatCard(string $label, string $displayValue, int $current, int $previous): void
-    {
-        $trendHtml = '';
-        if ($previous > 0) {
-            $delta = (($current - $previous) / $previous) * 100;
-            $up = $delta >= 0;
-            $cls = $up ? 'cap-captcha-status__trend--up' : 'cap-captcha-status__trend--down';
-            $arrow = $up ? '↗' : '↘';
-            $trendHtml = sprintf(
-                '<span class="cap-captcha-status__trend %s">%s %s%%</span>',
-                esc_attr($cls),
-                esc_html($arrow),
-                esc_html(number_format_i18n(abs($delta), 0))
-            );
-        }
-
-        printf(
-            '<div class="cap-captcha-status__card"><span class="cap-captcha-status__label">%s</span><strong class="cap-captcha-status__value">%s</strong>%s</div>',
-            esc_html($label),
-            esc_html($displayValue),
-            $trendHtml // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above
-        );
-    }
-
-    /**
-     * @param  array<int, array<string, mixed>>  $buckets
-     */
-    private function renderSparkline(array $buckets): void
-    {
-        $max = 0;
-        foreach ($buckets as $bucket) {
-            $count = (int) ($bucket['verified'] ?? $bucket['challenges'] ?? $bucket['count'] ?? 0);
-            if ($count > $max) {
-                $max = $count;
-            }
-        }
-
-        $count = count($buckets);
-        $tickHours = [0, 6, 12, 18];
-
-        echo '<div class="cap-captcha-status__sparkline" role="img" aria-label="'
-            .esc_attr__('Hourly solves chart', 'privacy-captcha-for-cap')
-            .'">';
-
-        echo '<div class="cap-captcha-status__bars">';
-        foreach ($buckets as $bucket) {
-            $bucketCount = (int) ($bucket['verified'] ?? $bucket['challenges'] ?? $bucket['count'] ?? 0);
-            $percent = $max > 0 ? max(4, (int) round($bucketCount / $max * 100)) : 4;
-            $bucketTs = (int) ($bucket['bucket'] ?? 0);
-            $title = sprintf(
-                /* translators: 1: localized hour label, 2: verified-solve count */
-                esc_attr__('%1$s — %2$d verified', 'privacy-captcha-for-cap'),
-                wp_date('H:i', $bucketTs),
-                $bucketCount
-            );
-            // $percent + $bucketCount are integers passed to %d; $title comes
-            // pre-escaped via esc_attr__/sprintf above.
-            echo wp_kses(
-                sprintf(
-                    '<span class="cap-captcha-status__bar" style="height:%d%%" data-count="%d" title="%s"></span>',
-                    $percent,
-                    $bucketCount,
-                    $title
-                ),
-                ['span' => ['class' => [], 'style' => [], 'data-count' => [], 'title' => []]]
-            );
-        }
-        echo '</div>';
-
-        echo '<div class="cap-captcha-status__axis" aria-hidden="true">';
-        foreach ($buckets as $bucket) {
-            $bucketTs = (int) ($bucket['bucket'] ?? 0);
-            $hour = (int) wp_date('G', $bucketTs);
-            $label = $count <= 6 || in_array($hour, $tickHours, true)
-                ? wp_date('H', $bucketTs)
-                : '';
-            printf('<span class="cap-captcha-status__tick">%s</span>', esc_html($label));
-        }
-        echo '</div>';
-
-        echo '</div>';
     }
 
     /**
      * Integrations grouped ALTCHA-style: WordPress core vs. third-party plugins.
      *
-     * @return array<int, array{label: string, description: string, items: array<string, array{label: string, description: string, available: bool}>}>
+     * @return array<int, array{label: string, description: string, collapsible?: bool, items: array<string, array{label: string, description: string, available: bool}>}>
      */
     private function integrationGroups(): array
     {
@@ -638,9 +485,14 @@ class Settings
                 'items' => array_intersect_key($all, array_flip(['comments', 'login', 'registration'])),
             ],
             [
-                'label' => __('Plugins', 'privacy-captcha-for-cap'),
-                'description' => __('Protect form-builder and e-commerce plugin submissions.', 'privacy-captcha-for-cap'),
-                'items' => array_intersect_key($all, array_flip(['gravity_forms', 'woocommerce'])),
+                'label' => __('Form plugins', 'privacy-captcha-for-cap'),
+                'description' => __('Protect form-builder plugin submissions.', 'privacy-captcha-for-cap'),
+                'items' => array_intersect_key($all, array_flip(['gravity_forms', 'contact_form_7'])),
+            ],
+            [
+                'label' => __('WooCommerce', 'privacy-captcha-for-cap'),
+                'description' => __('Protect WooCommerce checkout and My Account forms.', 'privacy-captcha-for-cap'),
+                'items' => array_intersect_key($all, array_flip(['woocommerce'])),
             ],
         ];
     }
@@ -650,11 +502,18 @@ class Settings
      */
     private function integrationDescriptions(): array
     {
+        $wooAvailable = class_exists('WooCommerce');
+
         return [
             'gravity_forms' => [
                 'label' => __('Gravity Forms', 'privacy-captcha-for-cap'),
                 'description' => __('Adds a "Privacy CAPTCHA for Cap" field to the form editor under Advanced Fields.', 'privacy-captcha-for-cap'),
                 'available' => class_exists('GFForms') || class_exists('GFAPI'),
+            ],
+            'contact_form_7' => [
+                'label' => __('Contact Form 7', 'privacy-captcha-for-cap'),
+                'description' => __('Protects every Contact Form 7 form submission.', 'privacy-captcha-for-cap'),
+                'available' => defined('WPCF7_VERSION') || class_exists('WPCF7'),
             ],
             'comments' => [
                 'label' => __('Comments', 'privacy-captcha-for-cap'),
@@ -672,11 +531,154 @@ class Settings
                 'available' => true,
             ],
             'woocommerce' => [
-                'label' => __('WooCommerce checkout', 'privacy-captcha-for-cap'),
+                'label' => __('WooCommerce', 'privacy-captcha-for-cap'),
+                'description' => __('Enable WooCommerce protection, then choose which forms below.', 'privacy-captcha-for-cap'),
+                'available' => $wooAvailable,
+            ],
+            'woocommerce_checkout' => [
+                'label' => __('Checkout', 'privacy-captcha-for-cap'),
                 'description' => __('Protects the WooCommerce checkout form.', 'privacy-captcha-for-cap'),
-                'available' => class_exists('WooCommerce'),
+                'available' => $wooAvailable,
+            ],
+            'woocommerce_login' => [
+                'label' => __('Account login', 'privacy-captcha-for-cap'),
+                'description' => __('Protects the My Account login form.', 'privacy-captcha-for-cap'),
+                'available' => $wooAvailable,
+            ],
+            'woocommerce_registration' => [
+                'label' => __('Account registration', 'privacy-captcha-for-cap'),
+                'description' => __('Protects the My Account registration form.', 'privacy-captcha-for-cap'),
+                'available' => $wooAvailable,
+            ],
+            'woocommerce_lost_password' => [
+                'label' => __('Lost password', 'privacy-captcha-for-cap'),
+                'description' => __('Protects the My Account lost-password form.', 'privacy-captcha-for-cap'),
+                'available' => $wooAvailable,
             ],
         ];
+    }
+
+    /**
+     * Render a single integration toggle card.
+     *
+     * @param  array{label: string, description: string, available: bool}  $meta
+     * @param  array<string, mixed>  $v
+     */
+    private function renderIntegrationCard(string $id, array $meta, array $v): void
+    {
+        ?>
+        <label class="cap-captcha-integration <?php echo $meta['available'] ? '' : 'cap-captcha-integration--disabled'; ?>">
+            <input
+                type="checkbox"
+                class="cap-captcha-integration__toggle"
+                name="<?php echo esc_attr(self::OPTION_KEY); ?>[integrations][<?php echo esc_attr($id); ?>]"
+                value="1"
+                <?php checked(! empty($v['integrations'][$id])); ?>
+                <?php disabled(! $meta['available']); ?>
+            >
+            <span class="cap-captcha-integration__body">
+                <strong class="cap-captcha-integration__name"><?php echo esc_html($meta['label']); ?></strong>
+                <?php if ($meta['description'] !== '') { ?>
+                    <span class="cap-captcha-integration__hint"><?php echo esc_html($meta['description']); ?></span>
+                <?php } ?>
+                <?php if (! $meta['available']) { ?>
+                    <span class="cap-captcha-integration__status"><?php echo esc_html__('Plugin not active', 'privacy-captcha-for-cap'); ?></span>
+                <?php } ?>
+                <?php if ($meta['available'] && $this->integrationHasOptions($id)) { ?>
+                    <a class="cap-captcha-integration__options-link" href="#cap-captcha-options-<?php echo esc_attr($id); ?>"><?php echo esc_html__('Options', 'privacy-captcha-for-cap'); ?> <span aria-hidden="true">↓</span></a>
+                <?php } ?>
+            </span>
+        </label>
+        <?php
+    }
+
+    /**
+     * Render a group's card grid plus the placement-options disclosure for any
+     * integration that has one.
+     *
+     * @param  array{items: array<string, array{label: string, description: string, available: bool}>}  $group
+     * @param  array<string, mixed>  $v
+     */
+    private function renderIntegrationCards(array $group, array $v): void
+    {
+        ?>
+        <div class="cap-captcha-integrations__grid">
+            <?php foreach ($group['items'] as $id => $meta) {
+                $this->renderIntegrationCard($id, $meta, $v);
+            } ?>
+        </div>
+        <?php foreach ($group['items'] as $id => $meta) {
+            if (! $meta['available'] || ! $this->integrationHasOptions($id)) {
+                continue;
+            }
+            $enabled = ! empty($v['integrations'][$id]); ?>
+            <details id="cap-captcha-options-<?php echo esc_attr($id); ?>" class="cap-captcha-integration-options<?php echo $enabled ? '' : ' cap-captcha-integration-options--muted'; ?>"<?php echo $enabled ? ' open' : ''; ?>>
+                <summary class="cap-captcha-integration-options__summary"><?php
+                    /* translators: %s is the integration name, e.g. "Gravity Forms". */
+                    echo esc_html(sprintf(__('%s options', 'privacy-captcha-for-cap'), $meta['label'])); ?></summary>
+                <div class="cap-captcha-integration-options__body">
+                    <?php $this->renderIntegrationOptions($id, $v); ?>
+                </div>
+            </details>
+        <?php }
+        }
+
+    /**
+     * Whether an integration has placement options shown in a disclosure under
+     * its card.
+     */
+    private function integrationHasOptions(string $id): bool
+    {
+        return in_array($id, ['gravity_forms', 'contact_form_7', 'woocommerce'], true);
+    }
+
+    /**
+     * Render the per-integration placement options (inside the <details> body).
+     *
+     * @param  array<string, mixed>  $v
+     */
+    private function renderIntegrationOptions(string $id, array $v): void
+    {
+        if ($id === 'contact_form_7') {
+            $mode = (string) ($v['cf7_mode'] ?? self::CF7_AUTOMATIC);
+            ?>
+            <fieldset>
+                <label>
+                    <input type="radio" name="<?php echo esc_attr(self::OPTION_KEY); ?>[cf7_mode]" value="<?php echo esc_attr(self::CF7_AUTOMATIC); ?>" <?php checked($mode, self::CF7_AUTOMATIC); ?>>
+                    <?php echo esc_html__('Automatic — protect every form (add the [cap_captcha] tag to a form for custom placement, or “cap_captcha: off” in its Additional Settings to skip it)', 'privacy-captcha-for-cap'); ?>
+                </label><br>
+                <label>
+                    <input type="radio" name="<?php echo esc_attr(self::OPTION_KEY); ?>[cf7_mode]" value="<?php echo esc_attr(self::CF7_MANUAL); ?>" <?php checked($mode, self::CF7_MANUAL); ?>>
+                    <?php echo esc_html__('Manual — only protect forms that contain the [cap_captcha] tag', 'privacy-captcha-for-cap'); ?>
+                </label>
+            </fieldset>
+            <p class="description"><?php echo esc_html__('Use Manual to keep the CAPTCHA off legally required or accessibility-sensitive forms.', 'privacy-captcha-for-cap'); ?></p>
+            <?php
+            return;
+        }
+
+        if ($id === 'gravity_forms') {
+            ?>
+            <label>
+                <input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[gf_protect_all]" value="1" <?php checked(! empty($v['gf_protect_all'])); ?>>
+                <?php echo esc_html__('Automatically protect every Gravity Form', 'privacy-captcha-for-cap'); ?>
+            </label>
+            <p class="description"><?php echo esc_html__('Otherwise add the “Privacy CAPTCHA for Cap” field to a form. Each form can override this under its own settings (Default / Always / Never).', 'privacy-captcha-for-cap'); ?></p>
+            <?php
+            return;
+        }
+
+        if ($id === 'woocommerce') {
+            $all = $this->integrationDescriptions();
+            $surfaces = ['woocommerce_checkout', 'woocommerce_login', 'woocommerce_registration', 'woocommerce_lost_password'];
+            ?>
+            <div class="cap-captcha-integrations__grid">
+                <?php foreach ($surfaces as $surface) {
+                    $this->renderIntegrationCard($surface, $all[$surface], $v);
+                } ?>
+            </div>
+            <?php
+        }
     }
 
     public function getEndpointBase(): string
@@ -787,9 +789,76 @@ class Settings
 
     public function isIntegrationEnabled(string $id): bool
     {
+        return $this->isSurfaceEnabled($id);
+    }
+
+    /**
+     * Whether the admin enabled protection for this surface in the settings.
+     */
+    public function isSurfaceEnabled(string $context): bool
+    {
         $values = $this->getAll();
 
-        return ! empty($values['integrations'][$id]);
+        return ! empty($values['integrations'][$context]);
+    }
+
+    /**
+     * Whether Cap protection should apply to a given surface/context. This is
+     * the single gate every integration passes through before rendering the
+     * widget AND before verifying a submission, so the filters below give
+     * developers full control over every situation.
+     *
+     * @param  string  $context  One of self::SURFACES, e.g. 'login' or
+     *                           'woocommerce_checkout'.
+     */
+    public function isProtected(string $context): bool
+    {
+        $enabled = $this->isSurfaceEnabled($context);
+
+        // WooCommerce sub-surfaces also require the WooCommerce master toggle.
+        if ($enabled && str_starts_with($context, 'woocommerce_') && ! $this->isSurfaceEnabled('woocommerce')) {
+            $enabled = false;
+        }
+
+        /**
+         * Filters whether Cap protection applies to any surface.
+         *
+         * @param  bool  $enabled  Whether the admin enabled this surface.
+         * @param  string  $context  The surface id (see Settings::SURFACES).
+         */
+        $enabled = (bool) apply_filters('cap_captcha_protect', $enabled, $context);
+
+        /**
+         * Filters whether Cap protection applies to one specific surface. The
+         * dynamic portion is the context, e.g. `cap_captcha_protect_login`.
+         *
+         * @param  bool  $enabled
+         */
+        return (bool) apply_filters("cap_captcha_protect_{$context}", $enabled);
+    }
+
+    /**
+     * Contact Form 7 placement mode: CF7_AUTOMATIC protects every form (minus
+     * per-form opt-outs); CF7_MANUAL protects only forms carrying the
+     * [cap_captcha] tag.
+     */
+    public function getCf7Mode(): string
+    {
+        $values = $this->getAll();
+        $mode = (string) ($values['cf7_mode'] ?? self::CF7_AUTOMATIC);
+
+        return $mode === self::CF7_MANUAL ? self::CF7_MANUAL : self::CF7_AUTOMATIC;
+    }
+
+    /**
+     * Whether every Gravity Form is auto-protected by default (a form can still
+     * opt out individually).
+     */
+    public function isGfProtectAll(): bool
+    {
+        $values = $this->getAll();
+
+        return ! empty($values['gf_protect_all']);
     }
 
     public function getWidgetEndpoint(): string
@@ -841,6 +910,14 @@ class Settings
 
         $this->cache = array_replace($this->defaults(), $stored);
 
+        // Migrate the pre-1.1 single `woocommerce` toggle (checkout only) to the
+        // granular `woocommerce_checkout` surface.
+        $integrations = is_array($this->cache['integrations'] ?? null) ? $this->cache['integrations'] : [];
+        if (array_key_exists('woocommerce', $integrations) && ! array_key_exists('woocommerce_checkout', $integrations)) {
+            $integrations['woocommerce_checkout'] = $integrations['woocommerce'];
+        }
+        $this->cache['integrations'] = $integrations;
+
         return $this->cache;
     }
 
@@ -860,11 +937,18 @@ class Settings
             'show_admin_notices' => true,
             'integrations' => [
                 'gravity_forms' => true,
+                'contact_form_7' => false,
                 'comments' => false,
                 'login' => false,
                 'registration' => false,
                 'woocommerce' => false,
+                'woocommerce_checkout' => false,
+                'woocommerce_login' => false,
+                'woocommerce_registration' => false,
+                'woocommerce_lost_password' => false,
             ],
+            'cf7_mode' => self::CF7_AUTOMATIC,
+            'gf_protect_all' => false,
         ];
     }
 }

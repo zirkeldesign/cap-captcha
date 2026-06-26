@@ -90,11 +90,33 @@ if (! function_exists('esc_attr')) {
     }
 }
 
+if (! function_exists('add_filter')) {
+    function add_filter(string $hook_name, callable $callback, int $priority = 10, int $accepted_args = 1): bool
+    {
+        $GLOBALS['__cap_filters'][$hook_name][] = ['cb' => $callback, 'args' => $accepted_args];
+
+        return true;
+    }
+}
+
 if (! function_exists('apply_filters')) {
     function apply_filters(string $hook_name, mixed $value, mixed ...$args): mixed
     {
+        foreach ($GLOBALS['__cap_filters'][$hook_name] ?? [] as $entry) {
+            $passArgs = array_slice($args, 0, max(0, $entry['args'] - 1));
+            $value = ($entry['cb'])($value, ...$passArgs);
+        }
+
         return $value;
     }
+}
+
+/**
+ * Reset the in-memory filter registry between tests.
+ */
+function cap_reset_filters(): void
+{
+    $GLOBALS['__cap_filters'] = [];
 }
 
 if (! function_exists('wp_json_encode')) {

@@ -40,6 +40,10 @@ final class Comments implements Integration
 
     public function renderWidget(): void
     {
+        if (! $this->settings->isProtected('comments')) {
+            return;
+        }
+
         if (! $this->settings->isConfigured()) {
             echo wp_kses($this->renderer->renderAdminNotice(__('Comments', 'privacy-captcha-for-cap')), Renderer::ADMIN_NOTICE_KSES);
 
@@ -58,7 +62,7 @@ final class Comments implements Integration
 
     public function attachFloatingAttrsToSubmit(string $button): string
     {
-        if (! $this->settings->isConfigured() || ! $this->settings->isFloating()) {
+        if (! $this->settings->isProtected('comments') || ! $this->settings->isConfigured() || ! $this->settings->isFloating()) {
             return $button;
         }
 
@@ -71,6 +75,10 @@ final class Comments implements Integration
      */
     public function verifyComment(array $commentData): array
     {
+        if (! $this->settings->isProtected('comments')) {
+            return $commentData;
+        }
+
         if (! $this->verifier->verifyCurrentRequest()) {
             wp_die(
                 esc_html__('CAPTCHA verification failed. Please go back and complete the challenge.', 'privacy-captcha-for-cap'),

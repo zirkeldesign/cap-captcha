@@ -39,7 +39,7 @@ final class Registration implements Integration
 
     public function enqueueAssets(): void
     {
-        if (! $this->settings->isConfigured()) {
+        if (! $this->settings->isProtected('registration') || ! $this->settings->isConfigured()) {
             return;
         }
         $this->enqueuer->enqueueForMode($this->settings->getDisplayMode());
@@ -47,6 +47,10 @@ final class Registration implements Integration
 
     public function renderWidget(): void
     {
+        if (! $this->settings->isProtected('registration')) {
+            return;
+        }
+
         if (! $this->settings->isConfigured()) {
             echo wp_kses($this->renderer->renderAdminNotice(__('Registration', 'privacy-captcha-for-cap')), Renderer::ADMIN_NOTICE_KSES);
 
@@ -62,6 +66,10 @@ final class Registration implements Integration
 
     public function verifyRegistration(WP_Error $errors): WP_Error
     {
+        if (! $this->settings->isProtected('registration')) {
+            return $errors;
+        }
+
         if (! $this->verifier->verifyCurrentRequest()) {
             $errors->add(
                 'cap_captcha_failed',

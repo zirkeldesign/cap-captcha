@@ -163,3 +163,55 @@
 }
 .cap-captcha-test-connection__result--ok { background: #edfaef; color: #00450c; border: 1px solid #b8e6bf; }
 .cap-captcha-test-connection__result--err { background: #fcf0f1; color: #8a1f11; border: 1px solid #f3c5cf; }
+
+/* ---------- Dashboard widget variant ---------- */
+
+.cap-captcha-status--dashboard { margin: 0; max-width: none; }
+.cap-captcha-status--dashboard .cap-captcha-status__grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75em;
+}
+.cap-captcha-status--dashboard .cap-captcha-status__card { padding: 0.6em 0.75em; }
+.cap-captcha-status--dashboard .cap-captcha-status__value { font-size: 18px; }
+.cap-captcha-status__settings-link { margin: 0.75em 0 0; }
+
+/* ---------- Per-integration placement options ---------- */
+
+.cap-captcha-integration-options {
+    margin: 0.25em 0 1.5em;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    background: #fff;
+    max-width: 920px;
+}
+.cap-captcha-integration-options__summary {
+    cursor: pointer;
+    padding: 0.6em 1em;
+    font-weight: 600;
+    color: #1d2327;
+}
+.cap-captcha-integration-options[open] .cap-captcha-integration-options__summary {
+    border-bottom: 1px solid #f0f0f1;
+}
+.cap-captcha-integration-options__body { padding: 0.85em 1em 1em; }
+.cap-captcha-integration-options__body .description { margin-top: 0.5em; }
+.cap-captcha-integration-options--muted { opacity: 0.55; }
+.cap-captcha-integration-options__body .cap-captcha-integrations__grid { margin: 0; }
+.cap-captcha-integration__options-link {
+    align-self: flex-start;
+    margin-top: 0.4em;
+    font-size: 12px;
+    text-decoration: none;
+}
+.cap-captcha-integration__options-link:hover { text-decoration: underline; }
+
+/* Marker shown when a card's quick-link jumps to its options disclosure. */
+.cap-captcha-integration-options:focus-within { outline: 2px solid #2271b1; outline-offset: 1px; }
+@keyframes cap-captcha-flash {
+    from { box-shadow: 0 0 0 3px #2271b1; }
+    to { box-shadow: 0 0 0 3px rgba(34, 113, 177, 0); }
+}
+.cap-captcha-integration-options--flash { animation: cap-captcha-flash 1.2s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+    .cap-captcha-integration-options--flash { animation: none; }
+}

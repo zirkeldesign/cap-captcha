@@ -26,6 +26,9 @@ tests
 .phpunit.cache
 get-version.php
 
+# GlotPress readme-translation source (not part of the install)
+languages/readme-*.txt
+
 # Distribution artefacts (we're building one — don't ship the last one)
 dist
 

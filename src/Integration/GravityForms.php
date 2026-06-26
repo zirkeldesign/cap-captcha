@@ -39,6 +39,13 @@ final class GravityForms implements Integration
 
     public function register(): void
     {
+        // Evaluated at load time because this registers the GF field type. The
+        // cap_captcha_protect / cap_captcha_protect_gravity_forms filters must
+        // therefore be added before the plugin boots (e.g. from an mu-plugin).
+        if (! Settings::get_instance()->isProtected('gravity_forms')) {
+            return;
+        }
+
         if (did_action('gform_loaded')) {
             $this->onGravityFormsLoaded();
         } else {
@@ -51,6 +58,123 @@ final class GravityForms implements Integration
         add_action('gform_enqueue_scripts', [$this, 'enqueueWidget'], 10, 2);
         add_action('wp_head', [$this->enqueuer, 'printGlobals'], 1);
         add_filter('gform_submit_button', [$this, 'attachFloatingAttrsToSubmit'], 10, 2);
+
+        // Per-form "Default / Always / Never" setting + global protect-all.
+        add_filter('gform_form_settings_fields', [$this, 'addFormSetting'], 10, 2);
+
+        // Auto-protected forms without the manual field get a synthetic
+        // cap_captcha field at runtime, so rendering and validation reuse the
+        // exact same field path. Runtime-only — never saved to the form.
+        add_filter('gform_pre_render', [$this, 'injectAutoField']);
+        add_filter('gform_pre_validation', [$this, 'injectAutoField']);
+        add_filter('gform_pre_submission_filter', [$this, 'injectAutoField']);
+    }
+
+    /**
+     * Per-form protection override in the Gravity Forms form settings.
+     *
+     * @param  array<string, mixed>  $fields
+     * @param  array<string, mixed>  $form
+     * @return array<string, mixed>
+     */
+    public function addFormSetting(array $fields, array $form): array
+    {
+        $fields['cap_captcha'] = [
+            'title' => esc_html__('Privacy CAPTCHA for Cap', 'privacy-captcha-for-cap'),
+            'fields' => [
+                [
+                    'type' => 'select',
+                    'name' => 'capCaptchaMode',
+                    'label' => esc_html__('Protection', 'privacy-captcha-for-cap'),
+                    'default_value' => 'default',
+                    'choices' => [
+                        ['label' => esc_html__('Default (use the global setting)', 'privacy-captcha-for-cap'), 'value' => 'default'],
+                        ['label' => esc_html__('Always protect this form', 'privacy-captcha-for-cap'), 'value' => 'always'],
+                        ['label' => esc_html__('Never protect this form', 'privacy-captcha-for-cap'), 'value' => 'never'],
+                    ],
+                    'tooltip' => esc_html__('Adding the "Privacy CAPTCHA for Cap" field to the form always protects it regardless of this setting.', 'privacy-captcha-for-cap'),
+                ],
+            ],
+        ];
+
+        return $fields;
+    }
+
+    /**
+     * @param  array<string, mixed>  $form
+     * @return array<string, mixed>
+     */
+    public function injectAutoField(array $form): array
+    {
+        if (! Settings::get_instance()->isProtected('gravity_forms')) {
+            return $form;
+        }
+
+        if (self::formHasCapField($form) || ! self::isFormAutoProtected($form)) {
+            return $form;
+        }
+
+        $field = new Field([
+            'id' => self::nextFieldId($form),
+            'formId' => (int) ($form['id'] ?? 0),
+            'type' => 'cap_captcha',
+            'label' => esc_html__('Privacy CAPTCHA for Cap', 'privacy-captcha-for-cap'),
+            'pageNumber' => self::lastPageNumber($form),
+        ]);
+
+        $form['fields'][] = $field;
+
+        return $form;
+    }
+
+    /**
+     * Resolve whether a form is auto-protected: the per-form override wins,
+     * otherwise the global "protect all" setting decides.
+     *
+     * @param  array<string, mixed>  $form
+     */
+    public static function isFormAutoProtected(array $form): bool
+    {
+        $mode = (string) ($form['capCaptchaMode'] ?? 'default');
+
+        if ($mode === 'always') {
+            return true;
+        }
+        if ($mode === 'never') {
+            return false;
+        }
+
+        return Settings::get_instance()->isGfProtectAll();
+    }
+
+    /**
+     * @param  array<string, mixed>  $form
+     */
+    private static function nextFieldId(array $form): int
+    {
+        $max = 0;
+        foreach (($form['fields'] ?? []) as $field) {
+            if (is_object($field) && isset($field->id)) {
+                $max = max($max, (int) $field->id);
+            }
+        }
+
+        return $max + 1;
+    }
+
+    /**
+     * @param  array<string, mixed>  $form
+     */
+    private static function lastPageNumber(array $form): int
+    {
+        $pages = 1;
+        foreach (($form['fields'] ?? []) as $field) {
+            if (is_object($field) && isset($field->type) && $field->type === 'page') {
+                $pages++;
+            }
+        }
+
+        return $pages;
     }
 
     /**
@@ -110,12 +234,16 @@ final class GravityForms implements Integration
      */
     public function enqueueWidget(array $form, bool $isAjax): void
     {
-        if (! self::formHasCapField($form)) {
+        $hasField = self::formHasCapField($form);
+        if (! $hasField && ! self::isFormAutoProtected($form)) {
             return;
         }
 
-        $hasFloating = self::formNeedsMode($form, Settings::MODE_FLOATING);
-        $hasProgrammatic = self::formNeedsMode($form, Settings::MODE_PROGRAMMATIC);
+        // For an auto-protected form whose synthetic field isn't present in the
+        // form passed here yet, fall back to the global display mode.
+        $autoMode = $hasField ? '' : Settings::get_instance()->getDisplayMode();
+        $hasFloating = self::formNeedsMode($form, Settings::MODE_FLOATING) || $autoMode === Settings::MODE_FLOATING;
+        $hasProgrammatic = self::formNeedsMode($form, Settings::MODE_PROGRAMMATIC) || $autoMode === Settings::MODE_PROGRAMMATIC;
 
         $this->enqueuer->enqueueCore();
         if ($hasFloating) {
