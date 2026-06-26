@@ -197,3 +197,10 @@
 .cap-captcha-integration-options__body .description { margin-top: 0.5em; }
 .cap-captcha-integration-options--muted { opacity: 0.55; }
 .cap-captcha-integration-options__body .cap-captcha-integrations__grid { margin: 0; }
+.cap-captcha-integration__options-link {
+    align-self: flex-start;
+    margin-top: 0.4em;
+    font-size: 12px;
+    text-decoration: none;
+}
+.cap-captcha-integration__options-link:hover { text-decoration: underline; }

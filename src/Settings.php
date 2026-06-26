@@ -584,6 +584,9 @@ class Settings
                 <?php if (! $meta['available']) { ?>
                     <span class="cap-captcha-integration__status"><?php echo esc_html__('Plugin not active', 'privacy-captcha-for-cap'); ?></span>
                 <?php } ?>
+                <?php if ($meta['available'] && $this->integrationHasOptions($id)) { ?>
+                    <a class="cap-captcha-integration__options-link" href="#cap-captcha-options-<?php echo esc_attr($id); ?>"><?php echo esc_html__('Options', 'privacy-captcha-for-cap'); ?> <span aria-hidden="true">↓</span></a>
+                <?php } ?>
             </span>
         </label>
         <?php
@@ -609,7 +612,7 @@ class Settings
                 continue;
             }
             $enabled = ! empty($v['integrations'][$id]); ?>
-            <details class="cap-captcha-integration-options<?php echo $enabled ? '' : ' cap-captcha-integration-options--muted'; ?>"<?php echo $enabled ? ' open' : ''; ?>>
+            <details id="cap-captcha-options-<?php echo esc_attr($id); ?>" class="cap-captcha-integration-options<?php echo $enabled ? '' : ' cap-captcha-integration-options--muted'; ?>"<?php echo $enabled ? ' open' : ''; ?>>
                 <summary class="cap-captcha-integration-options__summary"><?php
                     /* translators: %s is the integration name, e.g. "Gravity Forms". */
                     echo esc_html(sprintf(__('%s options', 'privacy-captcha-for-cap'), $meta['label'])); ?></summary>

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-06-26T06:47:56+00:00\n"
+"POT-Creation-Date: 2026-06-26T07:45:47+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: privacy-captcha-for-cap\n"
@@ -489,29 +489,33 @@ msgstr ""
 msgid "Plugin not active"
 msgstr ""
 
+#: src/Settings.php:588
+msgid "Options"
+msgstr ""
+
 #. translators: %s is the integration name, e.g. "Gravity Forms".
-#: src/Settings.php:615
+#: src/Settings.php:618
 #, php-format
 msgid "%s options"
 msgstr ""
 
-#: src/Settings.php:645
+#: src/Settings.php:648
 msgid "Automatic — protect every form (add the [cap_captcha] tag to a form for custom placement, or “cap_captcha: off” in its Additional Settings to skip it)"
 msgstr ""
 
-#: src/Settings.php:649
+#: src/Settings.php:652
 msgid "Manual — only protect forms that contain the [cap_captcha] tag"
 msgstr ""
 
-#: src/Settings.php:652
+#: src/Settings.php:655
 msgid "Use Manual to keep the CAPTCHA off legally required or accessibility-sensitive forms."
 msgstr ""
 
-#: src/Settings.php:661
+#: src/Settings.php:664
 msgid "Automatically protect every Gravity Form"
 msgstr ""
 
-#: src/Settings.php:663
+#: src/Settings.php:666
 msgid "Otherwise add the “Privacy CAPTCHA for Cap” field to a form. Each form can override this under its own settings (Default / Always / Never)."
 msgstr ""
 
