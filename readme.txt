@@ -88,6 +88,20 @@ Yes. Every surface passes through the `cap_captcha_protect` filter — `($enable
 
 Yes — useful for legally required or accessibility-sensitive forms. For **Contact Form 7**, set the mode to *Manual* (Settings → Form placement) and add the `[cap_captcha]` tag only to the forms you want protected; or, in *Automatic* mode, add `cap_captcha: off` to a form's Additional Settings to skip just that one. For **Gravity Forms**, each form has a *Privacy CAPTCHA* setting (Default / Always / Never) so you can exclude individual forms even when "protect all" is on.
 
+= Are there developer hooks / filters? =
+
+Yes. The main ones:
+
+* `cap_captcha_protect` — master gate for every surface: `($enabled, $context)` returning a boolean. Runs before the widget renders and before a submission is verified.
+* `cap_captcha_protect_{context}` — per-surface gate, e.g. `cap_captcha_protect_woocommerce_login`.
+* `cap_captcha_widget_src`, `cap_captcha_floating_src`, `cap_captcha_programmatic_src`, `cap_captcha_style_src` — override the script/style URLs (return `''` for the style to disable bundled CSS).
+* `cap_captcha_wasm_url`, `cap_captcha_pako_url` — override the WASM / pako URLs (default to the bundled copies).
+* `cap_captcha_i18n` — override the widget's `data-cap-i18n-*` strings.
+* `cap_captcha_floating_button_classes`, `cap_captcha_floating_position`, `cap_captcha_floating_autosubmit_src` — floating-mode tweaks.
+* `cap_captcha_display_mode` — override the resolved display mode for a specific Gravity Forms field.
+
+The full, annotated list with examples is in README.md.
+
 == Changelog ==
 
 = 1.1.0 =
