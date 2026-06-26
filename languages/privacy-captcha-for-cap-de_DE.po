@@ -256,7 +256,7 @@ msgstr "Status vom Cap-Server konnte nicht geladen werden. Bitte Endpunkt, Site-
 
 #: src/Status/StatusPanel.php:41
 msgid "Site"
-msgstr "Site"
+msgstr "Seite"
 
 #: src/Status/StatusPanel.php:75
 msgid "Difficulty"
@@ -266,7 +266,7 @@ msgstr "Schwierigkeit"
 #: src/Status/StatusPanel.php:80
 #, php-format
 msgid "%1$d challenges · %2$d-byte salt"
-msgstr "%1$d Challenges · %2$d-Byte-Salt"
+msgstr "%1$d Aufgaben · %2$d-Byte-Salt"
 
 #: src/Settings.php:465
 msgid "Refresh now"
@@ -308,7 +308,7 @@ msgstr "Verbinde WordPress mit deinem selbst gehosteten Cap-Server und wähle, w
 
 #: src/Status/StatusPanel.php:49
 msgid "Challenges"
-msgstr "Challenges"
+msgstr "Aufgaben"
 
 #: src/Status/StatusPanel.php:61
 msgid "Failed"
