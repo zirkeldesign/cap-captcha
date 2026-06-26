@@ -15,10 +15,20 @@ final class CapVerifier
 
     public function verify(string $token): bool
     {
+        return $this->check($token) === VerificationResult::Verified;
+    }
+
+    /**
+     * Verify a token, distinguishing an active rejection from an unreachable
+     * server. An empty token or missing configuration is reported as
+     * Unreachable (we cannot verify), so the caller's fail-open policy decides.
+     */
+    public function check(string $token): VerificationResult
+    {
         $token = trim($token);
 
         if ($token === '' || $this->endpointBase === '' || $this->siteKey === '' || $this->secretKey === '') {
-            return false;
+            return VerificationResult::Unreachable;
         }
 
         $url = rtrim($this->endpointBase, '/').'/'.$this->siteKey.'/siteverify';
@@ -33,11 +43,17 @@ final class CapVerifier
         );
 
         if (is_wp_error($response)) {
-            return false;
+            return VerificationResult::Unreachable;
         }
 
         $body = json_decode((string) wp_remote_retrieve_body($response), true);
 
-        return is_array($body) && ($body['success'] ?? false) === true;
+        if (! is_array($body)) {
+            return VerificationResult::Unreachable;
+        }
+
+        return ($body['success'] ?? false) === true
+            ? VerificationResult::Verified
+            : VerificationResult::Rejected;
     }
 }

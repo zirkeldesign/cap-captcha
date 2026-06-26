@@ -54,7 +54,7 @@ function capFakeSettings(bool $failOpen = false): Settings
             return 'secret';
         }
 
-        public function isFailOpen(): bool
+        public function isFailOpen(string $context = ''): bool
         {
             return false;
         }

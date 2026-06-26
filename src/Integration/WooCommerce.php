@@ -94,7 +94,7 @@ final class WooCommerce implements Integration
             return;
         }
 
-        if (! $this->verifier->verifyCurrentRequest() && function_exists('wc_add_notice')) {
+        if (! $this->verifier->verifyCurrentRequest('woocommerce_checkout') && function_exists('wc_add_notice')) {
             wc_add_notice(
                 esc_html__('CAPTCHA verification failed. Please try again.', 'privacy-captcha-for-cap'),
                 'error'
@@ -165,7 +165,7 @@ final class WooCommerce implements Integration
             return $errors;
         }
 
-        if (! $this->verifier->verifyCurrentRequest()) {
+        if (! $this->verifier->verifyCurrentRequest($context)) {
             $errors->add(
                 'cap_captcha_failed',
                 esc_html__('CAPTCHA verification failed. Please try again.', 'privacy-captcha-for-cap')

@@ -32,12 +32,15 @@ final class Validator
         $raw = isset($_POST['cap-token']) ? wp_unslash($_POST['cap-token']) : '';
         $token = is_string($raw) ? trim($raw) : '';
 
-        if ($token === '') {
-            return $this->failResult($result, $field, esc_html__('Please complete the CAPTCHA before submitting.', 'privacy-captcha-for-cap'));
-        }
+        // An empty token defers to the surface's fail-open policy (verifyToken
+        // returns the fail-open decision for an empty token), so a Cap outage
+        // can let a form through when configured to.
+        if (! $this->verifier->verifyToken($token, 'gravity_forms')) {
+            $message = $token === ''
+                ? esc_html__('Please complete the CAPTCHA before submitting.', 'privacy-captcha-for-cap')
+                : esc_html__('CAPTCHA verification failed. Please try again.', 'privacy-captcha-for-cap');
 
-        if (! $this->verifier->verifyToken($token)) {
-            return $this->failResult($result, $field, esc_html__('CAPTCHA verification failed. Please try again.', 'privacy-captcha-for-cap'));
+            return $this->failResult($result, $field, $message);
         }
 
         return $result;

@@ -79,7 +79,7 @@ final class Comments implements Integration
             return $commentData;
         }
 
-        if (! $this->verifier->verifyCurrentRequest()) {
+        if (! $this->verifier->verifyCurrentRequest('comments')) {
             wp_die(
                 esc_html__('CAPTCHA verification failed. Please go back and complete the challenge.', 'privacy-captcha-for-cap'),
                 esc_html__('CAPTCHA verification failed', 'privacy-captcha-for-cap'),

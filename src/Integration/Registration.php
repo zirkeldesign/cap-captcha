@@ -70,7 +70,7 @@ final class Registration implements Integration
             return $errors;
         }
 
-        if (! $this->verifier->verifyCurrentRequest()) {
+        if (! $this->verifier->verifyCurrentRequest('registration')) {
             $errors->add(
                 'cap_captcha_failed',
                 esc_html__('CAPTCHA verification failed. Please try again.', 'privacy-captcha-for-cap')

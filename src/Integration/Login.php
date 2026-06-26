@@ -104,7 +104,7 @@ final class Login implements Integration
             return $user;
         }
 
-        if (! $this->verifier->verifyCurrentRequest()) {
+        if (! $this->verifier->verifyCurrentRequest('login')) {
             return new WP_Error(
                 'cap_captcha_failed',
                 esc_html__('CAPTCHA verification failed. Please try again.', 'privacy-captcha-for-cap')
