@@ -25,6 +25,10 @@ class Settings
 
     public const WASM_CAP_SERVER = 'cap_server';
 
+    public const CF7_AUTOMATIC = 'automatic';
+
+    public const CF7_MANUAL = 'manual';
+
     /**
      * Every protectable surface/context. Each is an independent on/off toggle
      * and the `$context` passed to the `cap_captcha_protect` filter.
@@ -180,6 +184,11 @@ class Settings
             $integrations[$id] = ! empty($rawIntegrations[$id]);
         }
 
+        $cf7Mode = (string) ($input['cf7_mode'] ?? self::CF7_AUTOMATIC);
+        if (! in_array($cf7Mode, [self::CF7_AUTOMATIC, self::CF7_MANUAL], true)) {
+            $cf7Mode = self::CF7_AUTOMATIC;
+        }
+
         // Disabled inputs aren't submitted; keep the existing stored values so
         // toggling the wp-config constant on/off doesn't wipe whatever was saved
         // before. We don't trust the placeholder bullets that might leak through.
@@ -207,6 +216,8 @@ class Settings
             'fail_open' => ! empty($input['fail_open']),
             'show_admin_notices' => ! empty($input['show_admin_notices']),
             'integrations' => $integrations,
+            'cf7_mode' => $cf7Mode,
+            'gf_protect_all' => ! empty($input['gf_protect_all']),
         ];
     }
 
@@ -411,6 +422,45 @@ class Settings
                             </label>
                         <?php } ?>
                     </div>
+                <?php } ?>
+
+                <?php
+                $cf7Available = defined('WPCF7_VERSION') || class_exists('WPCF7');
+        $gfAvailable = class_exists('GFForms') || class_exists('GFAPI');
+        if ($cf7Available || $gfAvailable) { ?>
+                    <h2><?php echo esc_html__('Form placement', 'privacy-captcha-for-cap'); ?></h2>
+                    <table class="form-table" role="presentation">
+                        <?php if ($cf7Available) { ?>
+                            <tr>
+                                <th scope="row"><?php echo esc_html__('Contact Form 7', 'privacy-captcha-for-cap'); ?></th>
+                                <td>
+                                    <fieldset>
+                                        <label>
+                                            <input type="radio" name="<?php echo esc_attr(self::OPTION_KEY); ?>[cf7_mode]" value="<?php echo esc_attr(self::CF7_AUTOMATIC); ?>" <?php checked($v['cf7_mode'] ?? self::CF7_AUTOMATIC, self::CF7_AUTOMATIC); ?>>
+                                            <?php echo esc_html__('Automatic — protect every form (add the [cap_captcha] tag to a form for custom placement, or “cap_captcha: off” in its Additional Settings to skip it)', 'privacy-captcha-for-cap'); ?>
+                                        </label><br>
+                                        <label>
+                                            <input type="radio" name="<?php echo esc_attr(self::OPTION_KEY); ?>[cf7_mode]" value="<?php echo esc_attr(self::CF7_MANUAL); ?>" <?php checked($v['cf7_mode'] ?? self::CF7_AUTOMATIC, self::CF7_MANUAL); ?>>
+                                            <?php echo esc_html__('Manual — only protect forms that contain the [cap_captcha] tag', 'privacy-captcha-for-cap'); ?>
+                                        </label>
+                                    </fieldset>
+                                    <p class="description"><?php echo esc_html__('Use Manual to keep the CAPTCHA off legally required or accessibility-sensitive forms.', 'privacy-captcha-for-cap'); ?></p>
+                                </td>
+                            </tr>
+                        <?php } ?>
+                        <?php if ($gfAvailable) { ?>
+                            <tr>
+                                <th scope="row"><?php echo esc_html__('Gravity Forms', 'privacy-captcha-for-cap'); ?></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[gf_protect_all]" value="1" <?php checked(! empty($v['gf_protect_all'])); ?>>
+                                        <?php echo esc_html__('Automatically protect every Gravity Form', 'privacy-captcha-for-cap'); ?>
+                                    </label>
+                                    <p class="description"><?php echo esc_html__('Otherwise add the “Privacy CAPTCHA for Cap” field to a form. Each form can override this under its own settings (Default / Always / Never).', 'privacy-captcha-for-cap'); ?></p>
+                                </td>
+                            </tr>
+                        <?php } ?>
+                    </table>
                 <?php } ?>
 
                 <h2><?php echo esc_html__('Behavior', 'privacy-captcha-for-cap'); ?></h2>
@@ -718,6 +768,30 @@ class Settings
         return (bool) apply_filters("cap_captcha_protect_{$context}", $enabled);
     }
 
+    /**
+     * Contact Form 7 placement mode: CF7_AUTOMATIC protects every form (minus
+     * per-form opt-outs); CF7_MANUAL protects only forms carrying the
+     * [cap_captcha] tag.
+     */
+    public function getCf7Mode(): string
+    {
+        $values = $this->getAll();
+        $mode = (string) ($values['cf7_mode'] ?? self::CF7_AUTOMATIC);
+
+        return $mode === self::CF7_MANUAL ? self::CF7_MANUAL : self::CF7_AUTOMATIC;
+    }
+
+    /**
+     * Whether every Gravity Form is auto-protected by default (a form can still
+     * opt out individually).
+     */
+    public function isGfProtectAll(): bool
+    {
+        $values = $this->getAll();
+
+        return ! empty($values['gf_protect_all']);
+    }
+
     public function getWidgetEndpoint(): string
     {
         $base = $this->getEndpointBase();
@@ -803,6 +877,8 @@ class Settings
                 'woocommerce_registration' => false,
                 'woocommerce_lost_password' => false,
             ],
+            'cf7_mode' => self::CF7_AUTOMATIC,
+            'gf_protect_all' => false,
         ];
     }
 }

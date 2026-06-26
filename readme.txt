@@ -84,10 +84,15 @@ No third-party CDN requests. All widget assets are bundled and served from this 
 
 Yes. Every surface passes through the `cap_captcha_protect` filter — `($enabled, $context)` returning a boolean — before the widget renders and before a submission is verified. For example, to skip the CAPTCHA for logged-in users everywhere: `add_filter('cap_captcha_protect', fn($on, $ctx) => is_user_logged_in() ? false : $on, 10, 2);`. There is also a per-surface filter, e.g. `cap_captcha_protect_woocommerce_login`. Context ids: gravity_forms, contact_form_7, comments, login, registration, woocommerce_checkout, woocommerce_login, woocommerce_registration, woocommerce_lost_password.
 
+= Can I keep the CAPTCHA off a specific Contact Form 7 or Gravity Forms form? =
+
+Yes — useful for legally required or accessibility-sensitive forms. For **Contact Form 7**, set the mode to *Manual* (Settings → Form placement) and add the `[cap_captcha]` tag only to the forms you want protected; or, in *Automatic* mode, add `cap_captcha: off` to a form's Additional Settings to skip just that one. For **Gravity Forms**, each form has a *Privacy CAPTCHA* setting (Default / Always / Never) so you can exclude individual forms even when "protect all" is on.
+
 == Changelog ==
 
 = 1.1.0 =
-* Added: Contact Form 7 integration — protects every CF7 form.
+* Added: Contact Form 7 integration with placement control — automatic on all forms, or manual via the [cap_captcha] tag (so you can keep the CAPTCHA off legally required or accessibility-sensitive forms).
+* Added: Gravity Forms automatic protection — global "protect all" plus a per-form Default / Always / Never override, alongside the existing field.
 * Added: WooCommerce My Account login, registration, and lost-password forms (each its own toggle, alongside checkout).
 * Added: dashboard widget showing your Cap server stats at a glance.
 * Added: granular per-surface toggles and a `cap_captcha_protect` developer filter to control protection on any form, even conditionally.

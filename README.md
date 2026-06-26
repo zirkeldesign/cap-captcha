@@ -55,6 +55,13 @@ Each surface is an independent on/off toggle in **Settings → Privacy CAPTCHA f
 | `woocommerce_registration` | WooCommerce My Account registration |
 | `woocommerce_lost_password` | WooCommerce My Account lost password |
 
+## Form placement (Gravity Forms & Contact Form 7)
+
+Beyond the on/off surface toggle, the two form plugins offer placement control (Settings → Form placement), so a CAPTCHA can be kept off legally required or accessibility-sensitive forms:
+
+- **Contact Form 7** — *Automatic* protects every form (add the `[cap_captcha]` form-tag for custom placement, or `cap_captcha: off` in a form's Additional Settings to skip it); *Manual* protects only forms containing the `[cap_captcha]` tag. Verification is scoped to the same set, so an unprotected form is never blocked.
+- **Gravity Forms** — add the "Privacy CAPTCHA for Cap" field for precise placement, and/or enable "protect all Gravity Forms" globally. Each form has a **Default / Always / Never** override in its settings; an auto-protected form without the field gets a synthetic `cap_captcha` field injected at runtime.
+
 ## Filter hooks
 
 - `cap_captcha_protect` — master gate for **every** surface. `($enabled, $context)` → bool. Runs before the widget renders and before a submission is verified, so it controls all situations. Example: `add_filter('cap_captcha_protect', fn($on, $ctx) => is_user_logged_in() ? false : $on, 10, 2);`
