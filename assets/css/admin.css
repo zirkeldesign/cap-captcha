@@ -195,3 +195,5 @@
 }
 .cap-captcha-integration-options__body { padding: 0.85em 1em 1em; }
 .cap-captcha-integration-options__body .description { margin-top: 0.5em; }
+.cap-captcha-integration-options--muted { opacity: 0.55; }
+.cap-captcha-integration-options__body .cap-captcha-integrations__grid { margin: 0; }

@@ -12,23 +12,23 @@ msgstr ""
 "Language: de_DE_formal\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/Settings.php:268
+#: src/Settings.php:270
 msgid "Endpoint base URL"
 msgstr "Endpunkt-URL"
 
-#: src/Settings.php:283
+#: src/Settings.php:285
 msgid "Public URL of your Cap server, e.g. https://cap.example.com/"
 msgstr "Öffentliche URL Ihres Cap-Servers, z. B. https://cap.example.com/"
 
-#: src/Settings.php:290
+#: src/Settings.php:292
 msgid "Site key"
 msgstr "Site-Schlüssel"
 
-#: src/Settings.php:305
+#: src/Settings.php:307
 msgid "Public site key issued by your Cap server."
 msgstr "Öffentlicher Schlüssel, ausgestellt von Ihrem Cap-Server."
 
-#: src/Settings.php:312
+#: src/Settings.php:314
 msgid "Secret key"
 msgstr "Geheimer Schlüssel"
 
@@ -44,11 +44,11 @@ msgstr "Inline (immer sichtbar)"
 msgid "Floating (opens on click)"
 msgstr "Eingeklappt (öffnet sich auf Klick)"
 
-#: src/Settings.php:464
+#: src/Settings.php:431
 msgid "Save settings"
 msgstr "Einstellungen speichern"
 
-#: src/Settings.php:244
+#: src/Settings.php:246
 msgid "You do not have permission to access this page."
 msgstr "Sie haben keine Berechtigung, diese Seite zu öffnen."
 
@@ -113,107 +113,107 @@ msgstr "CAPTCHA-Prüfung fehlgeschlagen"
 msgid "Programmatic (auto-solves silently)"
 msgstr "Programmatisch (löst sich automatisch im Hintergrund)"
 
-#: src/Settings.php:264
+#: src/Settings.php:266
 msgid "Cap server"
 msgstr "Cap-Server"
 
-#: src/Settings.php:327
+#: src/Settings.php:329
 msgid "Secret key used to call /siteverify. Define CAP_CAPTCHA_SECRET_KEY in wp-config.php to override."
 msgstr "Geheimer Schlüssel für den /siteverify-Aufruf. Optional in wp-config.php via CAP_CAPTCHA_SECRET_KEY überschreiben."
 
-#: src/Settings.php:364
+#: src/Settings.php:366
 msgid "Display"
 msgstr "Darstellung"
 
-#: src/Settings.php:367
+#: src/Settings.php:369
 msgid "Default display mode"
 msgstr "Standard-Darstellung"
 
-#: src/Settings.php:370
+#: src/Settings.php:372
 msgid "Inline — widget visible in the form"
 msgstr "Inline — Widget sichtbar im Formular"
 
-#: src/Settings.php:371
+#: src/Settings.php:373
 msgid "Floating — opens on click of a trigger button"
 msgstr "Eingeklappt — öffnet sich beim Klick auf einen Button"
 
-#: src/Settings.php:372
+#: src/Settings.php:374
 msgid "Programmatic — solves silently in the background (no user interaction)"
 msgstr "Programmatisch — löst sich unbemerkt im Hintergrund (keine Nutzerinteraktion)"
 
-#: src/Settings.php:374
+#: src/Settings.php:376
 msgid "Per-form integrations can override this default."
 msgstr "Einzelne Integrationen können diesen Standard überschreiben."
 
-#: src/Settings.php:379
+#: src/Settings.php:381
 msgid "Privacy"
 msgstr "Datenschutz"
 
-#: src/Settings.php:382
+#: src/Settings.php:384
 msgid "WASM source"
 msgstr "WASM-Quelle"
 
-#: src/Settings.php:387
+#: src/Settings.php:389
 msgid "Bundled — load from this plugin (recommended, DSGVO-clean)"
 msgstr "Mitgeliefert — wird aus diesem Plugin geladen (empfohlen, DSGVO-konform)"
 
-#: src/Settings.php:391
+#: src/Settings.php:393
 msgid "Cap server — load from your endpoint at /assets/cap_wasm_bg.wasm"
 msgstr "Cap-Server — wird von Ihrem Endpunkt unter /assets/cap_wasm_bg.wasm geladen"
 
-#: src/Settings.php:398
+#: src/Settings.php:400
 msgid "Integrations"
 msgstr "Integrationen"
 
-#: src/Settings.php:419
+#: src/Settings.php:585
 msgid "Plugin not active"
 msgstr "Plugin nicht aktiv"
 
-#: src/Settings.php:440
+#: src/Settings.php:407
 msgid "Behavior"
 msgstr "Verhalten"
 
-#: src/Settings.php:443
+#: src/Settings.php:410
 msgid "Fail-open mode"
 msgstr "Fail-Open-Modus"
 
-#: src/Settings.php:447
+#: src/Settings.php:414
 msgid "Let submissions through when the Cap server is unreachable"
 msgstr "Sende-Vorgänge durchlassen, wenn der Cap-Server nicht erreichbar ist"
 
-#: src/Settings.php:449
+#: src/Settings.php:416
 msgid "Off by default. Enable only if temporary Cap outages must not block legitimate users (logins, checkouts)."
 msgstr "Standardmäßig aus. Nur aktivieren, wenn vorübergehende Cap-Ausfälle nicht zu blockierten Nutzern führen dürfen (Logins, Checkouts)."
 
 #: src/Integration/GravityForms/Field.php:181
-#: src/Settings.php:547
+#: src/Settings.php:509
 msgid "Gravity Forms"
 msgstr "Gravity Forms"
 
 #: src/Integration/Comments.php:48
-#: src/Settings.php:557
+#: src/Settings.php:519
 msgid "Comments"
 msgstr "Kommentare"
 
-#: src/Settings.php:558
+#: src/Settings.php:520
 msgid "Protects the default WordPress comment form."
 msgstr "Schützt das Standard-Kommentarformular von WordPress."
 
 #: src/Integration/Login.php:77
-#: src/Settings.php:562
+#: src/Settings.php:524
 msgid "Login"
 msgstr "Anmeldung"
 
-#: src/Settings.php:563
+#: src/Settings.php:525
 msgid "Protects wp-login.php and any front-end login form using login_form."
 msgstr "Schützt wp-login.php sowie Frontend-Anmeldeformulare, die login_form verwenden."
 
 #: src/Integration/Registration.php:55
-#: src/Settings.php:567
+#: src/Settings.php:529
 msgid "Registration"
 msgstr "Registrierung"
 
-#: src/Settings.php:568
+#: src/Settings.php:530
 msgid "Protects the WordPress user registration form."
 msgstr "Schützt das WordPress-Registrierungsformular."
 
@@ -221,36 +221,36 @@ msgstr "Schützt das WordPress-Registrierungsformular."
 msgid "WooCommerce checkout"
 msgstr "WooCommerce-Kasse"
 
-#: src/Settings.php:573
+#: src/Settings.php:540
 msgid "Protects the WooCommerce checkout form."
 msgstr "Schützt das WooCommerce-Kassenformular."
 
-#: src/Settings.php:453
+#: src/Settings.php:420
 msgid "Admin notices"
 msgstr "Admin-Hinweise"
 
-#: src/Settings.php:457
+#: src/Settings.php:424
 msgid "Warn site admins inline when an enabled integration is not configured"
 msgstr "Admins inline warnen, wenn eine aktivierte Integration nicht konfiguriert ist"
 
-#: src/Settings.php:459
+#: src/Settings.php:426
 msgid "Only users with manage_options ever see these notices — anonymous visitors get nothing rendered."
 msgstr "Nur Benutzer mit manage_options sehen diese Hinweise — anonymen Besuchern wird nichts angezeigt."
 
-#: src/Settings.php:334
+#: src/Settings.php:336
 msgid "Admin API key"
 msgstr "Admin-API-Schlüssel"
 
-#: src/Settings.php:349
+#: src/Settings.php:351
 msgid "Optional. Issue a dedicated key under Settings → API Keys in your Cap server and paste it here. Used for the Status panel below. Define CAP_CAPTCHA_ADMIN_API_KEY in wp-config.php to override."
 msgstr "Optional. Erstellen Sie einen dedizierten Schlüssel unter Einstellungen → API Keys auf Ihrem Cap-Server und fügen Sie ihn hier ein. Wird für die Status-Anzeige unten verwendet. Optional in wp-config.php via CAP_CAPTCHA_ADMIN_API_KEY überschreiben."
 
-#: src/Settings.php:479
+#: src/Settings.php:446
 msgid "Status"
 msgstr "Status"
 
 #: src/Admin/DashboardWidget.php:73
-#: src/Settings.php:483
+#: src/Settings.php:450
 msgid "Could not fetch status from the Cap server. Check the Endpoint, Site key, and Admin API key."
 msgstr "Status vom Cap-Server konnte nicht geladen werden. Bitte prüfen Sie Endpunkt, Site-Schlüssel und Admin-API-Schlüssel."
 
@@ -268,11 +268,11 @@ msgstr "Schwierigkeit"
 msgid "%1$d challenges · %2$d-byte salt"
 msgstr "%1$d Challenges · %2$d-Byte-Salt"
 
-#: src/Settings.php:498
+#: src/Settings.php:465
 msgid "Refresh now"
 msgstr "Jetzt aktualisieren"
 
-#: src/Settings.php:499
+#: src/Settings.php:466
 msgid "Status is cached for 5 minutes."
 msgstr "Status wird 5 Minuten zwischengespeichert."
 
@@ -280,19 +280,19 @@ msgstr "Status wird 5 Minuten zwischengespeichert."
 msgid "Hourly solves chart"
 msgstr "Stundenweise Lösungen"
 
-#: src/Settings.php:325
+#: src/Settings.php:327
 msgid "Defined via CAP_CAPTCHA_SECRET_KEY in wp-config.php — value here is read-only."
 msgstr "Definiert via CAP_CAPTCHA_SECRET_KEY in wp-config.php — Wert hier ist schreibgeschützt."
 
-#: src/Settings.php:347
+#: src/Settings.php:349
 msgid "Defined via CAP_CAPTCHA_ADMIN_API_KEY in wp-config.php — value here is read-only."
 msgstr "Definiert via CAP_CAPTCHA_ADMIN_API_KEY in wp-config.php — Wert hier ist schreibgeschützt."
 
-#: src/Settings.php:281
+#: src/Settings.php:283
 msgid "Defined via CAP_CAPTCHA_ENDPOINT in wp-config.php — value here is read-only."
 msgstr "Definiert via CAP_CAPTCHA_ENDPOINT in wp-config.php — Wert hier ist schreibgeschützt."
 
-#: src/Settings.php:303
+#: src/Settings.php:305
 msgid "Defined via CAP_CAPTCHA_SITE_KEY in wp-config.php — value here is read-only."
 msgstr "Definiert via CAP_CAPTCHA_SITE_KEY in wp-config.php — Wert hier ist schreibgeschützt."
 
@@ -301,7 +301,7 @@ msgid "Verify you are human"
 msgstr "Bestätigen Sie, dass Sie kein Bot sind"
 
 #. translators: %s is a link to trycap.dev
-#: src/Settings.php:255
+#: src/Settings.php:257
 #, php-format
 msgid "Connect WordPress to your self-hosted Cap server and choose which forms to protect. See %s for server setup."
 msgstr "Verbinden Sie WordPress mit Ihrem selbst gehosteten Cap-Server und wählen Sie, welche Formulare geschützt werden sollen. Anleitung unter %s."
@@ -330,11 +330,11 @@ msgstr "%s s"
 msgid "%1$s — %2$d verified"
 msgstr "%1$s — %2$d bestätigt"
 
-#: src/Settings.php:516
+#: src/Settings.php:483
 msgid "WordPress"
 msgstr "WordPress"
 
-#: src/Settings.php:517
+#: src/Settings.php:484
 msgid "Protect WordPress core forms."
 msgstr "Schützt WordPress-Kernformulare."
 
@@ -372,7 +372,7 @@ msgstr "Cap-Server hat keine gültige Antwort geliefert. Bitte Endpunkt und Admi
 msgid "Connected — site \"%1$s\" (%2$s)"
 msgstr "Verbunden — Site „%1$s“ (%2$s)"
 
-#: src/Settings.php:354
+#: src/Settings.php:356
 msgid "Test connection"
 msgstr "Verbindung testen"
 
@@ -385,7 +385,7 @@ msgstr "Verbindung testen"
 #: src/Integration/GravityForms/Field.php:103
 #: src/Settings.php:144
 #: src/Settings.php:145
-#: src/Settings.php:250
+#: src/Settings.php:252
 msgid "Privacy CAPTCHA for Cap"
 msgstr "Privacy CAPTCHA for Cap"
 
@@ -409,7 +409,7 @@ msgstr "Privacy CAPTCHA for Cap ist nicht konfiguriert. Hinterlegen Sie Endpunkt
 msgid "Privacy CAPTCHA for Cap (%s) is not configured. Set the endpoint and keys in Settings → Privacy CAPTCHA for Cap."
 msgstr "Privacy CAPTCHA for Cap (%s) ist nicht konfiguriert. Hinterlegen Sie Endpunkt und Schlüssel unter Einstellungen → Privacy CAPTCHA for Cap."
 
-#: src/Settings.php:548
+#: src/Settings.php:510
 msgid "Adds a \"Privacy CAPTCHA for Cap\" field to the form editor under Advanced Fields."
 msgstr "Fügt ein „Privacy CAPTCHA for Cap“-Feld zum Formular-Editor unter „Erweiterte Felder“ hinzu."
 
@@ -452,55 +452,56 @@ msgstr "WooCommerce-Registrierung"
 msgid "WooCommerce lost password"
 msgstr "WooCommerce-Passwort-vergessen"
 
-#: src/Settings.php:521
+#: src/Settings.php:488
 msgid "Form plugins"
 msgstr "Formular-Plugins"
 
-#: src/Settings.php:522
+#: src/Settings.php:489
 msgid "Protect form-builder plugin submissions."
 msgstr "Schützt Übermittlungen von Formular-Plugins."
 
-#: src/Settings.php:526
+#: src/Settings.php:493
+#: src/Settings.php:534
 msgid "WooCommerce"
 msgstr ""
 
-#: src/Settings.php:527
+#: src/Settings.php:494
 msgid "Protect WooCommerce checkout and My Account forms."
 msgstr "Schützt WooCommerce-Kasse und Mein-Konto-Formulare."
 
-#: src/Settings.php:552
+#: src/Settings.php:514
 msgid "Contact Form 7"
 msgstr "Contact Form 7"
 
-#: src/Settings.php:553
+#: src/Settings.php:515
 msgid "Protects every Contact Form 7 form submission."
 msgstr "Schützt jede Contact-Form-7-Übermittlung."
 
-#: src/Settings.php:572
+#: src/Settings.php:539
 msgid "Checkout"
 msgstr "Kasse"
 
-#: src/Settings.php:577
+#: src/Settings.php:544
 msgid "Account login"
 msgstr "Konto-Anmeldung"
 
-#: src/Settings.php:578
+#: src/Settings.php:545
 msgid "Protects the My Account login form."
 msgstr "Schützt das Anmeldeformular unter „Mein Konto“."
 
-#: src/Settings.php:582
+#: src/Settings.php:549
 msgid "Account registration"
 msgstr "Konto-Registrierung"
 
-#: src/Settings.php:583
+#: src/Settings.php:550
 msgid "Protects the My Account registration form."
 msgstr "Schützt das Registrierungsformular unter „Mein Konto“."
 
-#: src/Settings.php:587
+#: src/Settings.php:554
 msgid "Lost password"
 msgstr "Passwort vergessen"
 
-#: src/Settings.php:588
+#: src/Settings.php:555
 msgid "Protects the My Account lost-password form."
 msgstr "Schützt das Passwort-vergessen-Formular unter „Mein Konto“."
 
@@ -524,28 +525,32 @@ msgstr "Dieses Formular nie schützen"
 msgid "Adding the \"Privacy CAPTCHA for Cap\" field to the form always protects it regardless of this setting."
 msgstr "Wird das Feld „Privacy CAPTCHA for Cap“ zum Formular hinzugefügt, ist es unabhängig von dieser Einstellung immer geschützt."
 
-#: src/Settings.php:616
+#: src/Settings.php:645
 msgid "Automatic — protect every form (add the [cap_captcha] tag to a form for custom placement, or “cap_captcha: off” in its Additional Settings to skip it)"
 msgstr "Automatisch — jedes Formular schützen (fügen Sie einem Formular das [cap_captcha]-Tag für eine eigene Platzierung hinzu oder „cap_captcha: off“ in dessen zusätzlichen Einstellungen, um es zu überspringen)"
 
-#: src/Settings.php:620
+#: src/Settings.php:649
 msgid "Manual — only protect forms that contain the [cap_captcha] tag"
 msgstr "Manuell — nur Formulare schützen, die das [cap_captcha]-Tag enthalten"
 
-#: src/Settings.php:623
+#: src/Settings.php:652
 msgid "Use Manual to keep the CAPTCHA off legally required or accessibility-sensitive forms."
 msgstr "Verwenden Sie „Manuell“, um das CAPTCHA von gesetzlich vorgeschriebenen oder barrierekritischen Formularen fernzuhalten."
 
-#: src/Settings.php:632
+#: src/Settings.php:661
 msgid "Automatically protect every Gravity Form"
 msgstr "Jedes Gravity-Forms-Formular automatisch schützen"
 
-#: src/Settings.php:634
+#: src/Settings.php:663
 msgid "Otherwise add the “Privacy CAPTCHA for Cap” field to a form. Each form can override this under its own settings (Default / Always / Never)."
 msgstr "Andernfalls fügen Sie einem Formular das Feld „Privacy CAPTCHA for Cap“ hinzu. Jedes Formular kann dies in seinen eigenen Einstellungen überschreiben (Standard / Immer / Nie)."
 
 #. translators: %s is the integration name, e.g. "Gravity Forms".
-#: src/Settings.php:432
+#: src/Settings.php:615
 #, php-format
 msgid "%s options"
 msgstr "%s — Optionen"
+
+#: src/Settings.php:535
+msgid "Enable WooCommerce protection, then choose which forms below."
+msgstr "WooCommerce-Schutz aktivieren und unten auswählen, welche Formulare."

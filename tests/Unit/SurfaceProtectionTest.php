@@ -56,3 +56,11 @@ it('migrates the legacy woocommerce toggle to woocommerce_checkout', function ()
     expect($settings->isSurfaceEnabled('woocommerce_checkout'))->toBeTrue();
     expect($settings->isSurfaceEnabled('woocommerce_login'))->toBeFalse();
 });
+
+it('gates woocommerce sub-surfaces behind the woocommerce master toggle', function (): void {
+    $on = capStoreSurfaces(['woocommerce' => true, 'woocommerce_checkout' => true]);
+    expect($on->isProtected('woocommerce_checkout'))->toBeTrue();
+
+    $off = capStoreSurfaces(['woocommerce' => false, 'woocommerce_checkout' => true]);
+    expect($off->isProtected('woocommerce_checkout'))->toBeFalse();
+});

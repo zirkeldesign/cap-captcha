@@ -183,6 +183,8 @@ class Settings
         foreach (self::SURFACES as $id) {
             $integrations[$id] = ! empty($rawIntegrations[$id]);
         }
+        // WooCommerce master toggle (gates the four woocommerce_* sub-surfaces).
+        $integrations['woocommerce'] = ! empty($rawIntegrations['woocommerce']);
 
         $cf7Mode = (string) ($input['cf7_mode'] ?? self::CF7_AUTOMATIC);
         if (! in_array($cf7Mode, [self::CF7_AUTOMATIC, self::CF7_MANUAL], true)) {
@@ -399,42 +401,7 @@ class Settings
                 <?php foreach ($this->integrationGroups() as $group) { ?>
                     <h3 class="cap-captcha-integrations__heading"><?php echo esc_html($group['label']); ?></h3>
                     <p class="description cap-captcha-integrations__description"><?php echo esc_html($group['description']); ?></p>
-                    <div class="cap-captcha-integrations__grid">
-                        <?php foreach ($group['items'] as $id => $meta) { ?>
-                            <label class="cap-captcha-integration <?php echo $meta['available'] ? '' : 'cap-captcha-integration--disabled'; ?>">
-                                <input
-                                    type="checkbox"
-                                    class="cap-captcha-integration__toggle"
-                                    name="<?php echo esc_attr(self::OPTION_KEY); ?>[integrations][<?php echo esc_attr($id); ?>]"
-                                    value="1"
-                                    <?php checked(! empty($v['integrations'][$id])); ?>
-                                    <?php disabled(! $meta['available']); ?>
-                                >
-                                <span class="cap-captcha-integration__body">
-                                    <strong class="cap-captcha-integration__name"><?php echo esc_html($meta['label']); ?></strong>
-                                    <?php if ($meta['description'] !== '') { ?>
-                                        <span class="cap-captcha-integration__hint"><?php echo esc_html($meta['description']); ?></span>
-                                    <?php } ?>
-                                    <?php if (! $meta['available']) { ?>
-                                        <span class="cap-captcha-integration__status"><?php echo esc_html__('Plugin not active', 'privacy-captcha-for-cap'); ?></span>
-                                    <?php } ?>
-                                </span>
-                            </label>
-                        <?php } ?>
-                    </div>
-                    <?php foreach ($group['items'] as $id => $meta) {
-                        if (! $meta['available'] || ! $this->integrationHasOptions($id)) {
-                            continue;
-                        } ?>
-                        <details class="cap-captcha-integration-options"<?php echo ! empty($v['integrations'][$id]) ? ' open' : ''; ?>>
-                            <summary class="cap-captcha-integration-options__summary"><?php
-                                /* translators: %s is the integration name, e.g. "Gravity Forms". */
-                                echo esc_html(sprintf(__('%s options', 'privacy-captcha-for-cap'), $meta['label'])); ?></summary>
-                            <div class="cap-captcha-integration-options__body">
-                                <?php $this->renderIntegrationOptions($id, $v); ?>
-                            </div>
-                        </details>
-                    <?php } ?>
+                    <?php $this->renderIntegrationCards($group, $v); ?>
                 <?php } ?>
 
                 <h2><?php echo esc_html__('Behavior', 'privacy-captcha-for-cap'); ?></h2>
@@ -505,7 +472,7 @@ class Settings
     /**
      * Integrations grouped ALTCHA-style: WordPress core vs. third-party plugins.
      *
-     * @return array<int, array{label: string, description: string, items: array<string, array{label: string, description: string, available: bool}>}>
+     * @return array<int, array{label: string, description: string, collapsible?: bool, items: array<string, array{label: string, description: string, available: bool}>}>
      */
     private function integrationGroups(): array
     {
@@ -525,12 +492,7 @@ class Settings
             [
                 'label' => __('WooCommerce', 'privacy-captcha-for-cap'),
                 'description' => __('Protect WooCommerce checkout and My Account forms.', 'privacy-captcha-for-cap'),
-                'items' => array_intersect_key($all, array_flip([
-                    'woocommerce_checkout',
-                    'woocommerce_login',
-                    'woocommerce_registration',
-                    'woocommerce_lost_password',
-                ])),
+                'items' => array_intersect_key($all, array_flip(['woocommerce'])),
             ],
         ];
     }
@@ -568,6 +530,11 @@ class Settings
                 'description' => __('Protects the WordPress user registration form.', 'privacy-captcha-for-cap'),
                 'available' => true,
             ],
+            'woocommerce' => [
+                'label' => __('WooCommerce', 'privacy-captcha-for-cap'),
+                'description' => __('Enable WooCommerce protection, then choose which forms below.', 'privacy-captcha-for-cap'),
+                'available' => $wooAvailable,
+            ],
             'woocommerce_checkout' => [
                 'label' => __('Checkout', 'privacy-captcha-for-cap'),
                 'description' => __('Protects the WooCommerce checkout form.', 'privacy-captcha-for-cap'),
@@ -592,12 +559,74 @@ class Settings
     }
 
     /**
+     * Render a single integration toggle card.
+     *
+     * @param  array{label: string, description: string, available: bool}  $meta
+     * @param  array<string, mixed>  $v
+     */
+    private function renderIntegrationCard(string $id, array $meta, array $v): void
+    {
+        ?>
+        <label class="cap-captcha-integration <?php echo $meta['available'] ? '' : 'cap-captcha-integration--disabled'; ?>">
+            <input
+                type="checkbox"
+                class="cap-captcha-integration__toggle"
+                name="<?php echo esc_attr(self::OPTION_KEY); ?>[integrations][<?php echo esc_attr($id); ?>]"
+                value="1"
+                <?php checked(! empty($v['integrations'][$id])); ?>
+                <?php disabled(! $meta['available']); ?>
+            >
+            <span class="cap-captcha-integration__body">
+                <strong class="cap-captcha-integration__name"><?php echo esc_html($meta['label']); ?></strong>
+                <?php if ($meta['description'] !== '') { ?>
+                    <span class="cap-captcha-integration__hint"><?php echo esc_html($meta['description']); ?></span>
+                <?php } ?>
+                <?php if (! $meta['available']) { ?>
+                    <span class="cap-captcha-integration__status"><?php echo esc_html__('Plugin not active', 'privacy-captcha-for-cap'); ?></span>
+                <?php } ?>
+            </span>
+        </label>
+        <?php
+    }
+
+    /**
+     * Render a group's card grid plus the placement-options disclosure for any
+     * integration that has one.
+     *
+     * @param  array{items: array<string, array{label: string, description: string, available: bool}>}  $group
+     * @param  array<string, mixed>  $v
+     */
+    private function renderIntegrationCards(array $group, array $v): void
+    {
+        ?>
+        <div class="cap-captcha-integrations__grid">
+            <?php foreach ($group['items'] as $id => $meta) {
+                $this->renderIntegrationCard($id, $meta, $v);
+            } ?>
+        </div>
+        <?php foreach ($group['items'] as $id => $meta) {
+            if (! $meta['available'] || ! $this->integrationHasOptions($id)) {
+                continue;
+            }
+            $enabled = ! empty($v['integrations'][$id]); ?>
+            <details class="cap-captcha-integration-options<?php echo $enabled ? '' : ' cap-captcha-integration-options--muted'; ?>"<?php echo $enabled ? ' open' : ''; ?>>
+                <summary class="cap-captcha-integration-options__summary"><?php
+                    /* translators: %s is the integration name, e.g. "Gravity Forms". */
+                    echo esc_html(sprintf(__('%s options', 'privacy-captcha-for-cap'), $meta['label'])); ?></summary>
+                <div class="cap-captcha-integration-options__body">
+                    <?php $this->renderIntegrationOptions($id, $v); ?>
+                </div>
+            </details>
+        <?php }
+        }
+
+    /**
      * Whether an integration has placement options shown in a disclosure under
      * its card.
      */
     private function integrationHasOptions(string $id): bool
     {
-        return in_array($id, ['gravity_forms', 'contact_form_7'], true);
+        return in_array($id, ['gravity_forms', 'contact_form_7', 'woocommerce'], true);
     }
 
     /**
@@ -632,6 +661,19 @@ class Settings
                 <?php echo esc_html__('Automatically protect every Gravity Form', 'privacy-captcha-for-cap'); ?>
             </label>
             <p class="description"><?php echo esc_html__('Otherwise add the “Privacy CAPTCHA for Cap” field to a form. Each form can override this under its own settings (Default / Always / Never).', 'privacy-captcha-for-cap'); ?></p>
+            <?php
+            return;
+        }
+
+        if ($id === 'woocommerce') {
+            $all = $this->integrationDescriptions();
+            $surfaces = ['woocommerce_checkout', 'woocommerce_login', 'woocommerce_registration', 'woocommerce_lost_password'];
+            ?>
+            <div class="cap-captcha-integrations__grid">
+                <?php foreach ($surfaces as $surface) {
+                    $this->renderIntegrationCard($surface, $all[$surface], $v);
+                } ?>
+            </div>
             <?php
         }
     }
@@ -770,6 +812,11 @@ class Settings
     {
         $enabled = $this->isSurfaceEnabled($context);
 
+        // WooCommerce sub-surfaces also require the WooCommerce master toggle.
+        if ($enabled && str_starts_with($context, 'woocommerce_') && ! $this->isSurfaceEnabled('woocommerce')) {
+            $enabled = false;
+        }
+
         /**
          * Filters whether Cap protection applies to any surface.
          *
@@ -891,6 +938,7 @@ class Settings
                 'comments' => false,
                 'login' => false,
                 'registration' => false,
+                'woocommerce' => false,
                 'woocommerce_checkout' => false,
                 'woocommerce_login' => false,
                 'woocommerce_registration' => false,
