@@ -39,6 +39,13 @@ final class GravityForms implements Integration
 
     public function register(): void
     {
+        // Evaluated at load time because this registers the GF field type. The
+        // cap_captcha_protect / cap_captcha_protect_gravity_forms filters must
+        // therefore be added before the plugin boots (e.g. from an mu-plugin).
+        if (! Settings::get_instance()->isProtected('gravity_forms')) {
+            return;
+        }
+
         if (did_action('gform_loaded')) {
             $this->onGravityFormsLoaded();
         } else {

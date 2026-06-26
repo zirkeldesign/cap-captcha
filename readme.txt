@@ -4,7 +4,7 @@ Tags: captcha, spam, proof-of-work, comments, woocommerce
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.3
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,14 +21,17 @@ Unlike third-party CAPTCHAs (reCAPTCHA, hCaptcha, Turnstile), Cap runs the proof
 = Features =
 
 * **First-class Gravity Forms field** — drag a "Privacy CAPTCHA for Cap" into any form from the Advanced Fields group. Per-field display-mode override.
+* **Contact Form 7** integration — protects every CF7 form automatically.
 * **WordPress comments, wp-login, registration** integrations — togglable from one settings page.
-* **WooCommerce checkout** integration — only loads when WooCommerce is active.
+* **WooCommerce** integration — checkout plus the My Account login, registration, and lost-password forms, each its own toggle. Only loads when WooCommerce is active.
+* **Dashboard widget** — at-a-glance Cap server stats (challenges, verified, failed, hourly chart) right on the WordPress dashboard.
+* **Granular per-surface toggles** and **developer filters** (`cap_captcha_protect`) to enable/disable protection on any form, even conditionally.
 * **Three display modes**: inline widget, floating popover, or fully programmatic (auto-solves silently).
 * **Fully self-hosted assets** — the proof-of-work WebAssembly module, the cap-widget script, and the pako decompression library all ship inside the plugin and are served locally, so no jsdelivr or other third-party CDN is contacted at runtime. DSGVO/GDPR-clean by default.
 * **WP 6.5+ native script-module API** for proper ES-module loading.
 * **i18n-ready** with German translations bundled.
 * **Theme-friendly CSS** built on Gravity Forms Orbital tokens with `--cap-captcha-*` overrides.
-* **Filter hooks** for asset URLs, button classes, i18n strings, and the display mode.
+* **Filter hooks** for protection gating, asset URLs, button classes, i18n strings, and the display mode.
 
 = Requirements =
 
@@ -77,7 +80,18 @@ When enabled, the plugin lets submissions through if the Cap server is unreachab
 
 No third-party CDN requests. All widget assets are bundled and served from this plugin, including the `pako` decompression library (`assets/js/vendor/pako_inflate.min.js`), which older browsers without the native `DecompressionStream` API load locally instead of from jsdelivr. The only network requests the widget makes are to your own Cap endpoint to fetch and verify challenges.
 
+= Can I turn protection on or off per form in code? =
+
+Yes. Every surface passes through the `cap_captcha_protect` filter — `($enabled, $context)` returning a boolean — before the widget renders and before a submission is verified. For example, to skip the CAPTCHA for logged-in users everywhere: `add_filter('cap_captcha_protect', fn($on, $ctx) => is_user_logged_in() ? false : $on, 10, 2);`. There is also a per-surface filter, e.g. `cap_captcha_protect_woocommerce_login`. Context ids: gravity_forms, contact_form_7, comments, login, registration, woocommerce_checkout, woocommerce_login, woocommerce_registration, woocommerce_lost_password.
+
 == Changelog ==
+
+= 1.1.0 =
+* Added: Contact Form 7 integration — protects every CF7 form.
+* Added: WooCommerce My Account login, registration, and lost-password forms (each its own toggle, alongside checkout).
+* Added: dashboard widget showing your Cap server stats at a glance.
+* Added: granular per-surface toggles and a `cap_captcha_protect` developer filter to control protection on any form, even conditionally.
+* Fixed: the Login integration no longer interferes with WooCommerce My Account logins.
 
 = 1.0.0 =
 * Initial release.

@@ -59,7 +59,7 @@ final class Login implements Integration
 
     public function enqueueAssets(): void
     {
-        if (! $this->settings->isConfigured()) {
+        if (! $this->settings->isProtected('login') || ! $this->settings->isConfigured()) {
             return;
         }
 
@@ -69,6 +69,10 @@ final class Login implements Integration
 
     public function renderWidget(): void
     {
+        if (! $this->settings->isProtected('login')) {
+            return;
+        }
+
         if (! $this->settings->isConfigured()) {
             echo wp_kses($this->renderer->renderAdminNotice(__('Login', 'privacy-captcha-for-cap')), Renderer::ADMIN_NOTICE_KSES);
 
@@ -85,6 +89,18 @@ final class Login implements Integration
     public function verifyLogin(WP_User|WP_Error $user, string $password): WP_User|WP_Error
     {
         if ($user instanceof WP_Error) {
+            return $user;
+        }
+
+        if (! $this->settings->isProtected('login')) {
+            return $user;
+        }
+
+        // WooCommerce My Account logins also flow through wp_authenticate_user.
+        // Let the WooCommerce integration's woocommerce_login surface own those
+        // so we don't double-handle them (and so they obey their own toggle).
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Only detecting which form is posting; WooCommerce verifies its own login nonce before this runs.
+        if (isset($_POST['woocommerce-login'])) {
             return $user;
         }
 

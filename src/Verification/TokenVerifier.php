@@ -13,6 +13,17 @@ use ZirkelDesign\CapCaptcha\Settings;
  */
 final class TokenVerifier
 {
+    /**
+     * Per-request cache of verification results, keyed by token. Cap tokens are
+     * single-use, so when more than one hook verifies the same submission (e.g.
+     * WooCommerce login fires both `woocommerce_process_login_errors` and core's
+     * `wp_authenticate_user`), we must not redeem the token twice — the second
+     * redemption would fail. Memoizing keeps every check consistent.
+     *
+     * @var array<string, bool>
+     */
+    private array $memo = [];
+
     public function __construct(private readonly Settings $settings) {}
 
     public function verifyCurrentRequest(): bool
@@ -28,6 +39,10 @@ final class TokenVerifier
     {
         if ($token === '') {
             return $this->failedResult();
+        }
+
+        if (array_key_exists($token, $this->memo)) {
+            return $this->memo[$token];
         }
 
         if (! $this->settings->isConfigured()) {
@@ -48,10 +63,10 @@ final class TokenVerifier
         // bool. Until we surface the distinction, fail-open lets *any* false
         // through, which matches Oliweb's behavior.
         if (! $verified && $this->settings->isFailOpen()) {
-            return true;
+            $verified = true;
         }
 
-        return $verified;
+        return $this->memo[$token] = $verified;
     }
 
     private function failedResult(): bool
