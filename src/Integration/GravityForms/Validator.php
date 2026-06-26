@@ -8,7 +8,18 @@ use ZirkelDesign\CapCaptcha\Verification\TokenVerifier;
 
 final class Validator
 {
+    private bool $lastFailOpen = false;
+
     public function __construct(private readonly TokenVerifier $verifier) {}
+
+    /**
+     * Whether the last validated submission only passed because Cap was
+     * unreachable (fail-open).
+     */
+    public function wasLastFailOpen(): bool
+    {
+        return $this->lastFailOpen;
+    }
 
     /**
      * @param  array{is_valid: bool, form: array<string, mixed>}  $result
@@ -16,6 +27,7 @@ final class Validator
      */
     public function validate(array $result): array
     {
+        $this->lastFailOpen = false;
         $form = $result['form'];
 
         if (empty($form['fields']) || ! is_array($form['fields'])) {
@@ -42,6 +54,8 @@ final class Validator
 
             return $this->failResult($result, $field, $message);
         }
+
+        $this->lastFailOpen = $this->verifier->wasLastFailOpen();
 
         return $result;
     }
