@@ -4,7 +4,7 @@
  * Plugin Name:       Privacy CAPTCHA for Cap
  * Plugin URI:        https://github.com/zirkeldesign/privacy-captcha-for-cap
  * Description:       Privacy-friendly spam protection for WordPress comments, login, registration, WooCommerce checkout, and Gravity Forms, powered by your own Cap (trycap.dev) server.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Author:            Zirkel Design
  * Author URI:        https://zirkel.design
  * License:           GPL-2.0-or-later
@@ -22,7 +22,7 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-define('CAP_CAPTCHA_VERSION', '1.1.0');
+define('CAP_CAPTCHA_VERSION', '1.2.0');
 define('CAP_CAPTCHA_FILE', __FILE__);
 define('CAP_CAPTCHA_DIR', plugin_dir_path(__FILE__));
 define('CAP_CAPTCHA_URL', plugin_dir_url(__FILE__));

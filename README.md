@@ -66,6 +66,8 @@ Beyond the on/off surface toggle, the two form plugins offer placement control (
 
 - `cap_captcha_protect` — master gate for **every** surface. `($enabled, $context)` → bool. Runs before the widget renders and before a submission is verified, so it controls all situations. Example: `add_filter('cap_captcha_protect', fn($on, $ctx) => is_user_logged_in() ? false : $on, 10, 2);`
 - `cap_captcha_protect_{context}` — per-surface gate, e.g. `cap_captcha_protect_woocommerce_login`. `($enabled)` → bool. Runs after the master filter. (For `gravity_forms` this is evaluated at load time, so add the filter before the plugin boots.)
+- `cap_captcha_fail_open` — `($open, $context)` → bool. The resolved fail-open decision for a surface (after the per-surface override and global default). Fail-open only applies when Cap is unreachable or there is no token; an actively rejected token always blocks.
+- `cap_captcha_fail_open_pass` (action) — `($context, $data)` fires when a submission is accepted via fail-open. `$data` carries the relevant id (`entry_id`, `order_id`, `comment_id`, or `user_id`). The same records are tagged with `cap_captcha_fail_open = 1` meta.
 - `cap_captcha_widget_src` — override the URL the `cap-widget` ES module is loaded from. Default: `assets/js/vendor/cap-widget.js`.
 - `cap_captcha_floating_src` — override the URL of `cap-widget.floating.js`.
 - `cap_captcha_programmatic_src` — override the URL of `assets/js/programmatic.js`.

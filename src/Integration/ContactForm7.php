@@ -135,7 +135,7 @@ final class ContactForm7 implements Integration
             return false;
         }
 
-        return ! $this->verifier->verifyCurrentRequest();
+        return ! $this->verifier->verifyCurrentRequest('contact_form_7');
     }
 
     /**

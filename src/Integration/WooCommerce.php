@@ -37,12 +37,15 @@ final class WooCommerce implements Integration
 
     public const LOST_PASSWORD_WIDGET_ID = 'cap-captcha-wc-lost-password';
 
+    private bool $lastCheckoutFailOpen = false;
+
     public function register(): void
     {
         // Checkout.
         add_action('woocommerce_after_checkout_billing_form', [$this, 'renderWidget']);
         add_filter('woocommerce_order_button_html', [$this, 'attachFloatingAttrsToSubmit']);
         add_action('woocommerce_checkout_process', [$this, 'verifyCheckout']);
+        add_action('woocommerce_checkout_order_processed', [$this, 'annotateCheckoutFailOpen']);
 
         // My Account — login.
         add_action('woocommerce_login_form', [$this, 'renderLoginWidget']);
@@ -94,12 +97,42 @@ final class WooCommerce implements Integration
             return;
         }
 
-        if (! $this->verifier->verifyCurrentRequest() && function_exists('wc_add_notice')) {
-            wc_add_notice(
-                esc_html__('CAPTCHA verification failed. Please try again.', 'privacy-captcha-for-cap'),
-                'error'
-            );
+        if (! $this->verifier->verifyCurrentRequest('woocommerce_checkout')) {
+            if (function_exists('wc_add_notice')) {
+                wc_add_notice(
+                    esc_html__('CAPTCHA verification failed. Please try again.', 'privacy-captcha-for-cap'),
+                    'error'
+                );
+            }
+
+            return;
         }
+
+        $this->lastCheckoutFailOpen = $this->verifier->wasLastFailOpen();
+    }
+
+    /**
+     * Tag an order placed during a Cap outage (fail-open) with order meta and a
+     * note, so it can be reviewed later.
+     *
+     * @param  int|string  $orderId
+     */
+    public function annotateCheckoutFailOpen($orderId): void
+    {
+        if (! $this->lastCheckoutFailOpen) {
+            return;
+        }
+
+        $this->lastCheckoutFailOpen = false;
+
+        $order = function_exists('wc_get_order') ? wc_get_order($orderId) : null;
+        if (is_object($order) && method_exists($order, 'update_meta_data')) {
+            $order->update_meta_data('cap_captcha_fail_open', 1);
+            $order->add_order_note(esc_html__('Placed during a Cap outage — CAPTCHA verification was skipped (fail-open).', 'privacy-captcha-for-cap'));
+            $order->save();
+        }
+
+        do_action('cap_captcha_fail_open_pass', 'woocommerce_checkout', ['order_id' => (int) $orderId]);
     }
 
     public function renderLoginWidget(): void
@@ -165,7 +198,7 @@ final class WooCommerce implements Integration
             return $errors;
         }
 
-        if (! $this->verifier->verifyCurrentRequest()) {
+        if (! $this->verifier->verifyCurrentRequest($context)) {
             $errors->add(
                 'cap_captcha_failed',
                 esc_html__('CAPTCHA verification failed. Please try again.', 'privacy-captcha-for-cap')

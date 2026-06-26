@@ -8,7 +8,18 @@ use ZirkelDesign\CapCaptcha\Verification\TokenVerifier;
 
 final class Validator
 {
+    private bool $lastFailOpen = false;
+
     public function __construct(private readonly TokenVerifier $verifier) {}
+
+    /**
+     * Whether the last validated submission only passed because Cap was
+     * unreachable (fail-open).
+     */
+    public function wasLastFailOpen(): bool
+    {
+        return $this->lastFailOpen;
+    }
 
     /**
      * @param  array{is_valid: bool, form: array<string, mixed>}  $result
@@ -16,6 +27,7 @@ final class Validator
      */
     public function validate(array $result): array
     {
+        $this->lastFailOpen = false;
         $form = $result['form'];
 
         if (empty($form['fields']) || ! is_array($form['fields'])) {
@@ -32,13 +44,18 @@ final class Validator
         $raw = isset($_POST['cap-token']) ? wp_unslash($_POST['cap-token']) : '';
         $token = is_string($raw) ? trim($raw) : '';
 
-        if ($token === '') {
-            return $this->failResult($result, $field, esc_html__('Please complete the CAPTCHA before submitting.', 'privacy-captcha-for-cap'));
+        // An empty token defers to the surface's fail-open policy (verifyToken
+        // returns the fail-open decision for an empty token), so a Cap outage
+        // can let a form through when configured to.
+        if (! $this->verifier->verifyToken($token, 'gravity_forms')) {
+            $message = $token === ''
+                ? esc_html__('Please complete the CAPTCHA before submitting.', 'privacy-captcha-for-cap')
+                : esc_html__('CAPTCHA verification failed. Please try again.', 'privacy-captcha-for-cap');
+
+            return $this->failResult($result, $field, $message);
         }
 
-        if (! $this->verifier->verifyToken($token)) {
-            return $this->failResult($result, $field, esc_html__('CAPTCHA verification failed. Please try again.', 'privacy-captcha-for-cap'));
-        }
+        $this->lastFailOpen = $this->verifier->wasLastFailOpen();
 
         return $result;
     }

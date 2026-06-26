@@ -191,6 +191,15 @@ class Settings
             $cf7Mode = self::CF7_AUTOMATIC;
         }
 
+        $failOpenOverrides = [];
+        $rawOverrides = is_array($input['fail_open_overrides'] ?? null) ? $input['fail_open_overrides'] : [];
+        foreach (self::SURFACES as $id) {
+            $value = (string) ($rawOverrides[$id] ?? self::FAIL_OPEN_DEFAULT);
+            if (in_array($value, [self::FAIL_OPEN_OPEN, self::FAIL_OPEN_CLOSED], true)) {
+                $failOpenOverrides[$id] = $value;
+            }
+        }
+
         // Disabled inputs aren't submitted; keep the existing stored values so
         // toggling the wp-config constant on/off doesn't wipe whatever was saved
         // before. We don't trust the placeholder bullets that might leak through.
@@ -220,6 +229,7 @@ class Settings
             'integrations' => $integrations,
             'cf7_mode' => $cf7Mode,
             'gf_protect_all' => ! empty($input['gf_protect_all']),
+            'fail_open_overrides' => $failOpenOverrides,
         ];
     }
 
@@ -414,6 +424,7 @@ class Settings
                                 <?php echo esc_html__('Let submissions through when the Cap server is unreachable', 'privacy-captcha-for-cap'); ?>
                             </label>
                             <p class="description"><?php echo esc_html__('Off by default. Enable only if temporary Cap outages must not block legitimate users (logins, checkouts).', 'privacy-captcha-for-cap'); ?></p>
+                            <?php $this->renderFailOpenOverrides($v); ?>
                         </td>
                     </tr>
                     <tr>
@@ -624,6 +635,55 @@ class Settings
         }
 
     /**
+     * Per-surface fail-open override controls, shown in a disclosure under the
+     * global fail-open toggle. Only surfaces whose plugin is available appear.
+     *
+     * @param  array<string, mixed>  $v
+     */
+    private function renderFailOpenOverrides(array $v): void
+    {
+        $all = $this->integrationDescriptions();
+        $overrides = is_array($v['fail_open_overrides'] ?? null) ? $v['fail_open_overrides'] : [];
+
+        $rows = [];
+        foreach (self::SURFACES as $surface) {
+            if (empty($all[$surface]['available'])) {
+                continue;
+            }
+            $label = (string) $all[$surface]['label'];
+            if (str_starts_with($surface, 'woocommerce_')) {
+                $label = 'WooCommerce — '.$label;
+            }
+            $rows[$surface] = $label;
+        }
+
+        if ($rows === []) {
+            return;
+        }
+        ?>
+        <details class="cap-captcha-failopen">
+            <summary class="cap-captcha-failopen__summary"><?php echo esc_html__('Override fail-open per form', 'privacy-captcha-for-cap'); ?></summary>
+            <table class="cap-captcha-failopen__table">
+                <?php foreach ($rows as $surface => $label) {
+                    $value = (string) ($overrides[$surface] ?? self::FAIL_OPEN_DEFAULT); ?>
+                    <tr>
+                        <td><?php echo esc_html($label); ?></td>
+                        <td>
+                            <select name="<?php echo esc_attr(self::OPTION_KEY); ?>[fail_open_overrides][<?php echo esc_attr($surface); ?>]">
+                                <option value="<?php echo esc_attr(self::FAIL_OPEN_DEFAULT); ?>" <?php selected($value, self::FAIL_OPEN_DEFAULT); ?>><?php echo esc_html__('Default (use the global setting)', 'privacy-captcha-for-cap'); ?></option>
+                                <option value="<?php echo esc_attr(self::FAIL_OPEN_OPEN); ?>" <?php selected($value, self::FAIL_OPEN_OPEN); ?>><?php echo esc_html__('Fail-open (let through if Cap is unreachable)', 'privacy-captcha-for-cap'); ?></option>
+                                <option value="<?php echo esc_attr(self::FAIL_OPEN_CLOSED); ?>" <?php selected($value, self::FAIL_OPEN_CLOSED); ?>><?php echo esc_html__('Fail-closed (always require a valid proof)', 'privacy-captcha-for-cap'); ?></option>
+                            </select>
+                        </td>
+                    </tr>
+                <?php } ?>
+            </table>
+            <p class="description"><?php echo esc_html__('For example, let logins through during a Cap outage but always require a valid proof on contact forms.', 'privacy-captcha-for-cap'); ?></p>
+        </details>
+        <?php
+    }
+
+    /**
      * Whether an integration has placement options shown in a disclosure under
      * its card.
      */
@@ -765,11 +825,40 @@ class Settings
             && $this->getSecretKey() !== '';
     }
 
-    public function isFailOpen(): bool
+    public const FAIL_OPEN_DEFAULT = 'default';
+
+    public const FAIL_OPEN_OPEN = 'open';
+
+    public const FAIL_OPEN_CLOSED = 'closed';
+
+    /**
+     * Whether to let a submission through when Cap cannot be reached. The
+     * per-surface override (Default / Fail-open / Fail-closed) wins over the
+     * global default, then the `cap_captcha_fail_open` filter has the final say.
+     *
+     * @param  string  $context  Surface id (see self::SURFACES); '' uses the global default.
+     */
+    public function isFailOpen(string $context = ''): bool
     {
         $values = $this->getAll();
+        $global = ! empty($values['fail_open']);
 
-        return ! empty($values['fail_open']);
+        $overrides = is_array($values['fail_open_overrides'] ?? null) ? $values['fail_open_overrides'] : [];
+        $override = (string) ($overrides[$context] ?? self::FAIL_OPEN_DEFAULT);
+
+        $open = match ($override) {
+            self::FAIL_OPEN_OPEN => true,
+            self::FAIL_OPEN_CLOSED => false,
+            default => $global,
+        };
+
+        /**
+         * Filters the resolved fail-open decision for a surface.
+         *
+         * @param  bool  $open
+         * @param  string  $context
+         */
+        return (bool) apply_filters('cap_captcha_fail_open', $open, $context);
     }
 
     /**
@@ -949,6 +1038,7 @@ class Settings
             ],
             'cf7_mode' => self::CF7_AUTOMATIC,
             'gf_protect_all' => false,
+            'fail_open_overrides' => [],
         ];
     }
 }

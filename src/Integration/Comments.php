@@ -30,12 +30,15 @@ final class Comments implements Integration
 
     public const WIDGET_ID = 'cap-captcha-comment';
 
+    private bool $lastFailOpen = false;
+
     public function register(): void
     {
         add_action('comment_form_after_fields', [$this, 'renderWidget']);
         add_action('comment_form_logged_in_after', [$this, 'renderWidget']);
         add_filter('comment_form_submit_button', [$this, 'attachFloatingAttrsToSubmit']);
         add_filter('preprocess_comment', [$this, 'verifyComment']);
+        add_action('comment_post', [$this, 'annotateFailOpen']);
     }
 
     public function renderWidget(): void
@@ -79,7 +82,7 @@ final class Comments implements Integration
             return $commentData;
         }
 
-        if (! $this->verifier->verifyCurrentRequest()) {
+        if (! $this->verifier->verifyCurrentRequest('comments')) {
             wp_die(
                 esc_html__('CAPTCHA verification failed. Please go back and complete the challenge.', 'privacy-captcha-for-cap'),
                 esc_html__('CAPTCHA verification failed', 'privacy-captcha-for-cap'),
@@ -87,6 +90,24 @@ final class Comments implements Integration
             );
         }
 
+        $this->lastFailOpen = $this->verifier->wasLastFailOpen();
+
         return $commentData;
+    }
+
+    /**
+     * Tag a comment that was accepted only because Cap was unreachable.
+     *
+     * @param  int|string  $commentId
+     */
+    public function annotateFailOpen($commentId): void
+    {
+        if (! $this->lastFailOpen) {
+            return;
+        }
+
+        $this->lastFailOpen = false;
+        add_comment_meta((int) $commentId, 'cap_captcha_fail_open', 1, true);
+        do_action('cap_captcha_fail_open_pass', 'comments', ['comment_id' => (int) $commentId]);
     }
 }

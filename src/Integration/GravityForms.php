@@ -14,6 +14,8 @@ use ZirkelDesign\CapCaptcha\Verification\TokenVerifier;
 
 final class GravityForms implements Integration
 {
+    private ?Validator $validator = null;
+
     public function __construct(
         Settings $settings,
         Renderer $renderer,
@@ -52,8 +54,9 @@ final class GravityForms implements Integration
             add_action('gform_loaded', [$this, 'onGravityFormsLoaded'], 5);
         }
 
-        $validator = new Validator($this->verifier);
-        add_filter('gform_validation', [$validator, 'validate']);
+        $this->validator = new Validator($this->verifier);
+        add_filter('gform_validation', [$this->validator, 'validate']);
+        add_filter('gform_entry_post_save', [$this, 'annotateFailOpen'], 10, 2);
 
         add_action('gform_enqueue_scripts', [$this, 'enqueueWidget'], 10, 2);
         add_action('wp_head', [$this->enqueuer, 'printGlobals'], 1);
@@ -68,6 +71,30 @@ final class GravityForms implements Integration
         add_filter('gform_pre_render', [$this, 'injectAutoField']);
         add_filter('gform_pre_validation', [$this, 'injectAutoField']);
         add_filter('gform_pre_submission_filter', [$this, 'injectAutoField']);
+    }
+
+    /**
+     * Tag an entry saved from a submission that only passed because Cap was
+     * unreachable (fail-open).
+     *
+     * @param  array<string, mixed>  $entry
+     * @param  array<string, mixed>  $form
+     * @return array<string, mixed>
+     */
+    public function annotateFailOpen(array $entry, array $form): array
+    {
+        if ($this->validator === null || ! $this->validator->wasLastFailOpen() || empty($entry['id'])) {
+            return $entry;
+        }
+
+        $entryId = (int) $entry['id'];
+        if (function_exists('gform_update_meta')) {
+            gform_update_meta($entryId, 'cap_captcha_fail_open', 1);
+        }
+
+        do_action('cap_captcha_fail_open_pass', 'gravity_forms', ['entry_id' => $entryId]);
+
+        return $entry;
     }
 
     /**

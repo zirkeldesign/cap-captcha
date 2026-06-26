@@ -29,12 +29,15 @@ final class Registration implements Integration
         return true;
     }
 
+    private bool $lastFailOpen = false;
+
     public function register(): void
     {
         add_action('register_form', [$this, 'renderWidget']);
         add_action('login_enqueue_scripts', [$this, 'enqueueAssets']);
         add_action('login_footer', [Login::class, 'printScriptModulesOnLogin']);
         add_filter('registration_errors', [$this, 'verifyRegistration']);
+        add_action('user_register', [$this, 'annotateFailOpen']);
     }
 
     public function enqueueAssets(): void
@@ -70,13 +73,34 @@ final class Registration implements Integration
             return $errors;
         }
 
-        if (! $this->verifier->verifyCurrentRequest()) {
+        if (! $this->verifier->verifyCurrentRequest('registration')) {
             $errors->add(
                 'cap_captcha_failed',
                 esc_html__('CAPTCHA verification failed. Please try again.', 'privacy-captcha-for-cap')
             );
+
+            return $errors;
         }
 
+        $this->lastFailOpen = $this->verifier->wasLastFailOpen();
+
         return $errors;
+    }
+
+    /**
+     * Tag a user created through a registration that only passed because Cap
+     * was unreachable.
+     *
+     * @param  int|string  $userId
+     */
+    public function annotateFailOpen($userId): void
+    {
+        if (! $this->lastFailOpen) {
+            return;
+        }
+
+        $this->lastFailOpen = false;
+        add_user_meta((int) $userId, 'cap_captcha_fail_open', 1, true);
+        do_action('cap_captcha_fail_open_pass', 'registration', ['user_id' => (int) $userId]);
     }
 }

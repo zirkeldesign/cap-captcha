@@ -4,7 +4,7 @@ Tags: captcha, spam, proof-of-work, comments, woocommerce
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.3
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,7 +74,7 @@ Yes. Define `CAP_CAPTCHA_SECRET_KEY` in `wp-config.php` and the plugin will use 
 
 = What is "fail-open" mode? =
 
-When enabled, the plugin lets submissions through if the Cap server is unreachable. Off by default — only turn it on if temporary outages must not block legitimate users (logins, checkouts).
+When enabled, the plugin lets submissions through if the Cap server is unreachable. Off by default — only turn it on if temporary outages must not block legitimate users (logins, checkouts). It applies only when Cap genuinely can't be reached; a CAPTCHA the server actively rejects is always blocked. You can set fail-open **per form** (e.g. open for logins, closed for contact forms) under the global toggle, and any submission accepted this way is flagged for review (Gravity Forms entries, WooCommerce orders, comments, and new users get a `cap_captcha_fail_open` marker; orders also get a note).
 
 = Does the bundled `cap-widget` script make any external requests? =
 
@@ -94,6 +94,7 @@ Yes. The main ones:
 
 * `cap_captcha_protect` — master gate for every surface: `($enabled, $context)` returning a boolean. Runs before the widget renders and before a submission is verified.
 * `cap_captcha_protect_{context}` — per-surface gate, e.g. `cap_captcha_protect_woocommerce_login`.
+* `cap_captcha_fail_open` — `($open, $context)` the resolved fail-open decision for a surface; plus a `cap_captcha_fail_open_pass` action when a submission is accepted via fail-open.
 * `cap_captcha_widget_src`, `cap_captcha_floating_src`, `cap_captcha_programmatic_src`, `cap_captcha_style_src` — override the script/style URLs (return `''` for the style to disable bundled CSS).
 * `cap_captcha_wasm_url`, `cap_captcha_pako_url` — override the WASM / pako URLs (default to the bundled copies).
 * `cap_captcha_i18n` — override the widget's `data-cap-i18n-*` strings.
@@ -103,6 +104,11 @@ Yes. The main ones:
 The full, annotated list with examples is in README.md.
 
 == Changelog ==
+
+= 1.2.0 =
+* Added: per-form fail-open — let logins through during a Cap outage while still requiring a valid proof on contact forms (or any mix). Set it per surface, or keep the global default.
+* Added: submissions accepted during a Cap outage are now flagged for review (Gravity Forms entries, WooCommerce orders, comments, and new users get a "fail-open" marker; orders also get a note).
+* Improved: a CAPTCHA that the Cap server actively rejects is always blocked — fail-open only applies when Cap genuinely can't be reached.
 
 = 1.1.0 =
 * Added: Contact Form 7 integration with placement control — automatic on all forms, or manual via the [cap_captcha] tag (so you can keep the CAPTCHA off legally required or accessibility-sensitive forms).
