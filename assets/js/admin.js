@@ -72,6 +72,11 @@
                 details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 const summary = details.querySelector('summary');
                 if (summary) summary.focus();
+
+                // Flash the disclosure so it's clear where the link landed.
+                details.classList.remove('cap-captcha-integration-options--flash');
+                void details.offsetWidth; // reflow so the animation restarts on repeat clicks
+                details.classList.add('cap-captcha-integration-options--flash');
             });
         });
     });

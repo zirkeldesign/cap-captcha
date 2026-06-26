@@ -204,3 +204,14 @@
     text-decoration: none;
 }
 .cap-captcha-integration__options-link:hover { text-decoration: underline; }
+
+/* Marker shown when a card's quick-link jumps to its options disclosure. */
+.cap-captcha-integration-options:focus-within { outline: 2px solid #2271b1; outline-offset: 1px; }
+@keyframes cap-captcha-flash {
+    from { box-shadow: 0 0 0 3px #2271b1; }
+    to { box-shadow: 0 0 0 3px rgba(34, 113, 177, 0); }
+}
+.cap-captcha-integration-options--flash { animation: cap-captcha-flash 1.2s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+    .cap-captcha-integration-options--flash { animation: none; }
+}
