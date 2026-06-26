@@ -174,3 +174,24 @@
 .cap-captcha-status--dashboard .cap-captcha-status__card { padding: 0.6em 0.75em; }
 .cap-captcha-status--dashboard .cap-captcha-status__value { font-size: 18px; }
 .cap-captcha-status__settings-link { margin: 0.75em 0 0; }
+
+/* ---------- Per-integration placement options ---------- */
+
+.cap-captcha-integration-options {
+    margin: 0.25em 0 1.5em;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    background: #fff;
+    max-width: 920px;
+}
+.cap-captcha-integration-options__summary {
+    cursor: pointer;
+    padding: 0.6em 1em;
+    font-weight: 600;
+    color: #1d2327;
+}
+.cap-captcha-integration-options[open] .cap-captcha-integration-options__summary {
+    border-bottom: 1px solid #f0f0f1;
+}
+.cap-captcha-integration-options__body { padding: 0.85em 1em 1em; }
+.cap-captcha-integration-options__body .description { margin-top: 0.5em; }
