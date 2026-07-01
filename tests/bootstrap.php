@@ -136,7 +136,43 @@ if (! function_exists('is_wp_error')) {
 if (! class_exists('WP_Error')) {
     class WP_Error
     {
-        public function __construct(public string $code = '', public string $message = '') {}
+        /** @var array<string, array<int, string>> */
+        public array $errors = [];
+
+        public function __construct(string $code = '', string $message = '')
+        {
+            if ($code !== '') {
+                $this->add($code, $message);
+            }
+        }
+
+        public function add(string $code, string $message = ''): void
+        {
+            $this->errors[$code][] = $message;
+        }
+
+        public function get_error_code(): string
+        {
+            return array_key_first($this->errors) ?? '';
+        }
+
+        /** @return array<int, string> */
+        public function get_error_codes(): array
+        {
+            return array_keys($this->errors);
+        }
+
+        public function has_errors(): bool
+        {
+            return $this->errors !== [];
+        }
+    }
+}
+
+if (! class_exists('WP_User')) {
+    class WP_User
+    {
+        public int $ID = 1;
     }
 }
 
