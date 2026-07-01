@@ -38,6 +38,13 @@ jobs:
 
           svn checkout "https://plugins.svn.wordpress.org/${SLUG}/assets" svn-assets
 
+          # Self-heal: an earlier misconfigured plugin-deploy run copied
+          # .wordpress-org/assets INTO assets/ (nested assets/assets/). Remove
+          # the stray nested directory so the flat files below are what's served.
+          if [ -e svn-assets/assets ]; then
+            svn delete --force svn-assets/assets
+          fi
+
           # Copy only the files WordPress.org uses (icon + banners). The .svg
           # banner source stays in the repo but is not deployed.
           cp .wordpress-org/assets/icon.svg \

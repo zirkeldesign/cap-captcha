@@ -31,3 +31,7 @@ jobs:
           SVN_PASSWORD: ${{ secrets.WPORG_SVN_PASSWORD }}
           SLUG: privacy-captcha-for-cap
           GENERATE_ZIP: true
+          # The icon/banner live in .wordpress-org/assets. Without this the
+          # action defaults ASSETS_DIR to .wordpress-org and copies the whole
+          # assets/ subdir into SVN assets/ → nested assets/assets/ (broken art).
+          ASSETS_DIR: .wordpress-org/assets
