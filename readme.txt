@@ -4,7 +4,7 @@ Tags: captcha, spam, proof-of-work, comments, woocommerce
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.3
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -104,6 +104,9 @@ Yes. The main ones:
 The full, annotated list with examples is in README.md.
 
 == Changelog ==
+
+= 1.2.2 =
+* Fixed: with an integration enabled but the plugin not yet configured (missing endpoint, site key, or secret), logins and other forms could be blocked with a "CAPTCHA verification failed" error. An unconfigured plugin now never blocks submissions — protection simply stays off (and admins still see the "not configured" notice) until the Cap settings are filled in.
 
 = 1.2.1 =
 * Fixed: creating an account during WooCommerce checkout no longer shows a "CAPTCHA verification failed" error when the CAPTCHA is only enabled for the My Account forms (the widget isn't rendered on checkout). The My Account registration form is still protected as before.

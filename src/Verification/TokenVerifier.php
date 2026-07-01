@@ -41,7 +41,15 @@ final class TokenVerifier
     {
         $this->lastFailOpen = false;
 
-        if ($token === '' || ! $this->settings->isConfigured()) {
+        // Not configured → the plugin can't verify anything and renders no
+        // widget, so it must never block a submission. Protection is simply
+        // off until the endpoint, site key, and secret are set (admins still
+        // see the "not configured" notice on the form).
+        if (! $this->settings->isConfigured()) {
+            return true;
+        }
+
+        if ($token === '') {
             return $this->failOpen($context);
         }
 
