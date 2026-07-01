@@ -1,6 +1,7 @@
 # Hidden directories
 .git
 .github
+.claude
 .wordpress-org
 .idea
 .vscode

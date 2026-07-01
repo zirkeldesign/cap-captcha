@@ -100,7 +100,7 @@ final class Login implements Integration
         // Let the WooCommerce integration's woocommerce_login surface own those
         // so we don't double-handle them (and so they obey their own toggle).
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Only detecting which form is posting; WooCommerce verifies its own login nonce before this runs.
-        if (isset($_POST['woocommerce-login'])) {
+        if (isset($_POST['woocommerce-login-nonce'])) {
             return $user;
         }
 

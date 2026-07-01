@@ -157,6 +157,15 @@ final class WooCommerce implements Integration
 
     public function verifyRegistration(WP_Error $errors): WP_Error
     {
+        // woocommerce_registration_errors also fires during checkout account
+        // creation and programmatic wc_create_new_customer(), where our widget
+        // is not rendered. Only validate the actual My Account registration
+        // form, identified by its own nonce field.
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Only detecting which form is posting; WooCommerce verifies this nonce itself before this runs.
+        if (! isset($_POST['woocommerce-register-nonce'])) {
+            return $errors;
+        }
+
         return $this->verifyAccountForm('woocommerce_registration', $errors);
     }
 
