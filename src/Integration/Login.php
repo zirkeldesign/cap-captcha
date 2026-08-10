@@ -9,6 +9,7 @@ use WP_User;
 use ZirkelDesign\CapCaptcha\Asset\Enqueuer;
 use ZirkelDesign\CapCaptcha\Asset\Renderer;
 use ZirkelDesign\CapCaptcha\Settings;
+use ZirkelDesign\CapCaptcha\Verification\RequestContext;
 use ZirkelDesign\CapCaptcha\Verification\TokenVerifier;
 
 final class Login implements Integration
@@ -101,6 +102,14 @@ final class Login implements Integration
         // so we don't double-handle them (and so they obey their own toggle).
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Only detecting which form is posting; WooCommerce verifies its own login nonce before this runs.
         if (isset($_POST['woocommerce-login-nonce'])) {
+            return $user;
+        }
+
+        // wp_authenticate_user also fires for XML-RPC, the REST API and any
+        // membership/page-builder login form we never rendered the widget into.
+        // Those requests cannot carry a token; gating them would lock people out
+        // rather than stop bots. `wp-submit` is wp-login.php's own submit input.
+        if (! RequestContext::isFormPost('wp-submit')) {
             return $user;
         }
 

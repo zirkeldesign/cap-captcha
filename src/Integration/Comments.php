@@ -7,6 +7,7 @@ namespace ZirkelDesign\CapCaptcha\Integration;
 use ZirkelDesign\CapCaptcha\Asset\Enqueuer;
 use ZirkelDesign\CapCaptcha\Asset\Renderer;
 use ZirkelDesign\CapCaptcha\Settings;
+use ZirkelDesign\CapCaptcha\Verification\RequestContext;
 use ZirkelDesign\CapCaptcha\Verification\TokenVerifier;
 
 final class Comments implements Integration
@@ -79,6 +80,14 @@ final class Comments implements Integration
     public function verifyComment(array $commentData): array
     {
         if (! $this->settings->isProtected('comments')) {
+            return $commentData;
+        }
+
+        // preprocess_comment also fires from wp_new_comment(), which the REST
+        // comments controller, XML-RPC and WXR importers all call — and our
+        // failure path is wp_die(), which would wreck a REST response. Only gate
+        // posts from the comment form we render into.
+        if (! RequestContext::isFormPost('comment_post_ID')) {
             return $commentData;
         }
 
