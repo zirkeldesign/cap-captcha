@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Release builds are attached to the GitHub release. Previously the Releases page offered only GitHub's auto-generated source archive, which is not an installable plugin.
 
 ### Fixed
+- Refreshed the vendored `pako_inflate.min.js`, which had been left at 2.1.0 when `9d04c10` bumped the pinned dependency to 2.2.0. The shipped copy now matches `package.json` again, as `bun run build:check` requires.
 - `.distignore` excluded `dist/` but not the integration-test WordPress install, and the pattern for Composer's `vendor/` also matched `assets/js/vendor/`. Both were caught by building and inspecting the zip: the first inflated it from 92 KB to 28 MB, the second silently dropped `cap-widget.js` and would have shipped a plugin with no widget at all.
 
 ## [1.2.3] - Unreleased
