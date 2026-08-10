@@ -4,7 +4,7 @@ Tags: captcha, spam, proof-of-work, comments, woocommerce
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.3
-Stable tag: 1.2.2
+Stable tag: 1.3.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -76,6 +76,10 @@ Yes. Define `CAP_CAPTCHA_SECRET_KEY` in `wp-config.php` and the plugin will use 
 
 When enabled, the plugin lets submissions through if the Cap server is unreachable. Off by default — only turn it on if temporary outages must not block legitimate users (logins, checkouts). It applies only when Cap genuinely can't be reached; a CAPTCHA the server actively rejects is always blocked. You can set fail-open **per form** (e.g. open for logins, closed for contact forms) under the global toggle, and any submission accepted this way is flagged for review (Gravity Forms entries, WooCommerce orders, comments, and new users get a `cap_captcha_fail_open` marker; orders also get a note).
 
+= Does it work with multi-page Gravity Forms and preview steps? =
+
+Yes. On a multi-page form the CAPTCHA is only required on the page that shows it, or on the final submit. When a form is protected automatically, the field is placed on the **last** page — which on a form built with a preview step (a page break plus `{all_fields}`) is the preview page, right next to the submit button. If that last page can be hidden by conditional logic, place the CAPTCHA field manually on a page that always renders, or move it with the `cap_captcha_gf_field_page` filter — the plugin will not enforce a CAPTCHA the visitor was never shown.
+
 = Does the bundled `cap-widget` script make any external requests? =
 
 No third-party CDN requests. All widget assets are bundled and served from this plugin, including the `pako` decompression library (`assets/js/vendor/pako_inflate.min.js`), which older browsers without the native `DecompressionStream` API load locally instead of from jsdelivr. The only network requests the widget makes are to your own Cap endpoint to fetch and verify challenges.
@@ -95,6 +99,9 @@ Yes. The main ones:
 * `cap_captcha_protect` — master gate for every surface: `($enabled, $context)` returning a boolean. Runs before the widget renders and before a submission is verified.
 * `cap_captcha_protect_{context}` — per-surface gate, e.g. `cap_captcha_protect_woocommerce_login`.
 * `cap_captcha_fail_open` — `($open, $context)` the resolved fail-open decision for a surface; plus a `cap_captcha_fail_open_pass` action when a submission is accepted via fail-open.
+* `cap_captcha_require_token` — `($required, $context)` return `false` to let a surface through when no token was submitted at all. Fail-open does **not** cover this case: it applies only to an unreachable Cap server.
+* `cap_captcha_gf_field_page` — `($page, $form)` which page the auto-injected Gravity Forms field is placed on (defaults to the last page).
+* `cap_captcha_gf_verified_ttl` — `($seconds)` how long a solved challenge stays valid across the pages of one multi-page Gravity Forms submission (default one hour); plus a `cap_captcha_gf_skipped_hidden($formId, $fieldId)` action when conditional logic hid the field and enforcement was skipped.
 * `cap_captcha_widget_src`, `cap_captcha_floating_src`, `cap_captcha_programmatic_src`, `cap_captcha_style_src` — override the script/style URLs (return `''` for the style to disable bundled CSS).
 * `cap_captcha_wasm_url`, `cap_captcha_pako_url` — override the WASM / pako URLs (default to the bundled copies).
 * `cap_captcha_i18n` — override the widget's `data-cap-i18n-*` strings.
@@ -104,6 +111,13 @@ Yes. The main ones:
 The full, annotated list with examples is in README.md.
 
 == Changelog ==
+
+= 1.3.0 =
+* Fixed: multi-page Gravity Forms — including forms with a preview step — now work correctly. Previously the CAPTCHA could not be completed on the final page: depending on your fail-open setting the form was either impossible to send, or could be sent without solving the CAPTCHA at all.
+* Fixed: fail-open mode no longer lets a submission through when no CAPTCHA was solved at all. It now only applies when the Cap server is genuinely unreachable, as described in the settings. **If you had fail-open enabled, your forms were effectively unprotected — please re-test your forms after updating.**
+* Improved: when a Gravity Forms submission fails the CAPTCHA, visitors are taken back to the page that actually shows it.
+* Improved: logins and comments made through the REST API, XML-RPC or WP-CLI are no longer blocked by the CAPTCHA — they never show one.
+* Fixed: missing spacing between the CAPTCHA and the button below it on the WordPress login form.
 
 = 1.2.2 =
 * Fixed: with an integration enabled but the plugin not yet configured (missing endpoint, site key, or secret), logins and other forms could be blocked with a "CAPTCHA verification failed" error. An unconfigured plugin now never blocks submissions — protection simply stays off (and admins still see the "not configured" notice) until the Cap settings are filled in.
