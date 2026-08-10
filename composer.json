@@ -75,12 +75,9 @@
     ],
     "dist": [
       "@php -r \"echo '🔨 Building distribution archive...\\n';\"",
-      "@putenv COMPOSER_DISCARD_CHANGES=true",
-      "composer install --no-dev --optimize-autoloader --quiet",
       "mkdir -p dist",
       "@php get-version.php > .version",
       "wp dist-archive . dist/privacy-captcha-for-cap-$(cat .version).zip --plugin-dirname=privacy-captcha-for-cap",
-      "composer install --quiet",
       "@php -r \"echo '✅ Distribution archive created: dist/privacy-captcha-for-cap-' . trim(file_get_contents('.version')) . '.zip\\n'; unlink('.version');\""
     ]
   }

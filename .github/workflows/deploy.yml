@@ -5,7 +5,7 @@ on:
     types: [published]
 
 permissions:
-  contents: read
+  contents: write # attach the built zip to the release
 
 jobs:
   deploy:
@@ -15,16 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          coverage: none
-
-      - name: Install production dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+      # No composer install: the plugin has no runtime dependencies and ships
+      # its own PSR-4 autoloader (autoload.php), so vendor/ is dev-only and
+      # excluded from the package via .distignore.
 
       - name: WordPress Plugin Deploy
+        id: deploy
         uses: 10up/action-wordpress-plugin-deploy@stable
         env:
           SVN_USERNAME: ${{ secrets.WPORG_SVN_USERNAME }}
@@ -35,3 +31,11 @@ jobs:
           # action defaults ASSETS_DIR to .wordpress-org and copies the whole
           # assets/ subdir into SVN assets/ → nested assets/assets/ (broken art).
           ASSETS_DIR: .wordpress-org/assets
+
+      # Without this the Releases page only offers GitHub's auto-generated
+      # source archive, which is not an installable plugin.
+      - name: Attach the built zip to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZIP: ${{ steps.deploy.outputs.zip-path }}
+        run: gh release upload "${{ github.event.release.tag_name }}" "$ZIP" --clobber
