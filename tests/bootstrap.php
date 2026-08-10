@@ -119,6 +119,27 @@ function cap_reset_filters(): void
     $GLOBALS['__cap_filters'] = [];
 }
 
+if (! function_exists('add_action')) {
+    function add_action(string $hook_name, callable $callback, int $priority = 10, int $accepted_args = 1): bool
+    {
+        return add_filter($hook_name, $callback, $priority, $accepted_args);
+    }
+}
+
+if (! function_exists('do_action')) {
+    function do_action(string $hook_name, mixed ...$args): void
+    {
+        $GLOBALS['__cap_actions'][$hook_name][] = $args;
+    }
+}
+
+if (! function_exists('is_admin')) {
+    function is_admin(): bool
+    {
+        return false;
+    }
+}
+
 if (! function_exists('wp_json_encode')) {
     function wp_json_encode(mixed $data, int $options = 0, int $depth = 512): string|false
     {
