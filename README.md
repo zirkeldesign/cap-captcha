@@ -84,13 +84,32 @@ Beyond the on/off surface toggle, the two form plugins offer placement control (
 
 | Command | What it does |
 | --- | --- |
-| `composer test` | Run Pest unit tests |
+| `composer test` | Run Pest unit tests (no WordPress needed) |
+| `composer test:integration:setup` | Provision the WordPress + Gravity Forms fixture |
+| `composer test:integration` | Run the integration suite against real Gravity Forms |
 | `composer phpstan` | Static analysis (level 6) |
 | `composer format` | Apply Pint formatting |
 | `composer format:test` | Check Pint formatting |
 | `bun run build` | Copy vendored cap-widget + WASM into `assets/` |
 | `bun run build:check` | Fail if vendored assets are out of date |
 | `bun run translate` | Regenerate POT + update PO files + compile MO |
+
+## Integration tests
+
+`tests/Unit` runs against hand-rolled WordPress stubs and needs nothing installed. `tests/Integration` runs against a **real** WordPress + Gravity Forms, driving `GFFormDisplay::process_form()` so the multi-page paging logic under test is GF's own rather than our reading of it. That distinction matters: the unit suite hand-sets `pageNumber` on a field, while real Gravity Forms derives it from the field's position relative to the page breaks.
+
+Provision the fixture once — it needs `wp-cli`, PHP with `pdo_sqlite`, and a Gravity Forms copy you hold a licence for (no MySQL, no Gravity Perks):
+
+```sh
+CAP_GF_SOURCE=/path/to/gravityforms composer test:integration:setup
+composer test:integration
+```
+
+The install is cached in `.wp-integration/` (gitignored); pass `--fresh` to the setup script to rebuild it. Cap itself is never contacted — `/siteverify` responses are faked through `pre_http_request`, and a backstop filter fails any other outbound request so the suite stays offline.
+
+The preview-step form is a plain two-page Gravity Form (page break plus an HTML field holding `{all_fields}`), which is exactly the shape the Gravity Wiz *GP Preview Submission* perk produces — so the reported bug reproduces without the commercial perk.
+
+CI does not run this suite: Gravity Forms is commercial and would need its licence credentials as repository secrets. To wire it up, add a job that installs GF from the `gravity.io` Composer repo using a `COMPOSER_AUTH` secret and `if: github.event.pull_request.head.repo.full_name == github.repository` so it skips on forks.
 
 ## Architecture
 
