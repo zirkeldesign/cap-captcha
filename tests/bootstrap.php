@@ -133,6 +133,13 @@ if (! function_exists('do_action')) {
     }
 }
 
+if (! function_exists('esc_url_raw')) {
+    function esc_url_raw(string $url): string
+    {
+        return filter_var($url, FILTER_SANITIZE_URL) ?: '';
+    }
+}
+
 if (! function_exists('is_admin')) {
     function is_admin(): bool
     {
