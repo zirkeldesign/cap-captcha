@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.3] - Unreleased
+
+### Fixed
+- **The plugin did nothing unless Gravity Forms was active** ([#11](https://github.com/zirkeldesign/privacy-captcha-for-cap/issues/11)). The entry file gated `Plugin::boot()` behind `class_exists('GFForms') || class_exists('GFAPI')` — a leftover from before `01bc7e6` rebuilt the Gravity Forms-only plugin into a multi-surface one. Without Gravity Forms nothing booted: no **Settings → Privacy CAPTCHA for Cap** page, and no comments, login, registration or WooCommerce protection either. `Plugin::boot()` has always asked each integration whether its host plugin is present (`Integration::isAvailable()`), so the outer gate was both wrong and redundant; it and its "requires Gravity Forms" admin notice are gone. This matches what `readme.txt` already documented: *"Gravity Forms 2.5+ (only if you enable the Gravity Forms integration)"*.
+- A copy installed straight from the source repository (which ships no `vendor/`, so nothing is autoloadable) now shows an explanatory admin notice instead of dying with a class-not-found fatal. The release zips from WordPress.org and the GitHub Releases page are unaffected — they bundle the autoloader.
+
 ## [1.2.2] - Unreleased
 
 ### Fixed
