@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - Unreleased
+
+### Fixed
+- **Multi-page Gravity Forms were unprotected or unsubmittable.** `gform_validation` fires on every page transition, but `cap-token` is a plain POST field written into the form by `<cap-widget>` — not a form value — and Gravity Forms re-renders the whole form (all pages, inactive ones hidden) on each transition, so the solved token never survives to the final submit. `Validator` demanded a proof on every page regardless. On forms with a preview step (e.g. the Gravity Wiz *GP Preview Submission* perk, which is a page break plus `{all_fields}` on the last page) the CAPTCHA could therefore never be satisfied: fail-closed made the form unsubmittable, fail-open made the CAPTCHA decorative. `Validator` is now page-aware — it requires the proof exactly when the page holding the field was submitted, or on the final submit — and `VerifiedState` carries an earlier page's verification across the rest of the submission via a short-lived transient keyed on GF's `gform_unique_id`.
+- **Fail-open no longer waives a missing token.** `TokenVerifier::verifyToken('')` routed an empty token through `failOpen()`, so a site with fail-open enabled accepted *every* tokenless submission on *every* surface — the CAPTCHA became optional. Fail-open now means what `readme.txt` and the settings UI have always said it means: it applies only when the Cap server is genuinely unreachable. The not-configured short-circuit is unchanged.
+
+### Added
+- **Integration test suite** (`tests/Integration`, `composer test:integration`) running against a real WordPress + Gravity Forms via `GFFormDisplay::process_form()`, so the paging logic the validator mirrors is GF's own. Six of its twelve cases fail against the pre-fix code. The fixture is provisioned by `scripts/integration-env.sh` (SQLite, no MySQL, no Gravity Perks); Cap is faked through `pre_http_request` so the suite stays offline. Not wired into CI — Gravity Forms is commercial and would need its licence as a repository secret.
+- `cap_captcha_require_token($required, $context)` filter — opt a surface out of the empty-token block for flows that legitimately submit without our widget.
+- `cap_captcha_gf_field_page($page, $form)` filter — move the auto-injected Gravity Forms field off the last page (useful when that page can be hidden by conditional logic).
+- `cap_captcha_gf_verified_ttl($seconds)` filter — how long a verification stays valid across the pages of one submission (default one hour).
+- `cap_captcha_gf_skipped_hidden($formId, $fieldId)` action — fires when enforcement is skipped because conditional logic hid the CAPTCHA field.
+
+### Changed
+- The CAPTCHA now keeps a margin below itself on `wp-login.php` when something follows it, instead of sitting flush against the submit button.
+- `gform_validation` is now registered with two arguments; `GFAPI::submit_form()` and validation-only API calls (`api-submit` / `api-validate`) are no longer gated, since no browser could have solved a challenge.
+- Failing Gravity Forms validation now sets `failed_validation_page`, so the visitor lands on the page that actually holds the widget.
+- The Login, Registration, and Comments integrations bail out on REST, XML-RPC, WP-CLI and cron requests, and on posts that lack the marker field of the form we render into (`wp-submit` / `comment_post_ID`). Without this the fail-closed change above would have broken XML-RPC logins, the REST comments endpoint, and third-party login forms.
+
 ## [1.2.2] - Unreleased
 
 ### Fixed
