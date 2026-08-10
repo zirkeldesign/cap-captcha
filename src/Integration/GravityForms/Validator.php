@@ -157,8 +157,10 @@ final class Validator
             return max(1, (int) GFFormDisplay::get_source_page($formId));
         }
 
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading GF's own paging input to decide which page is being validated; GF verified the submission before this hook.
-        $raw = $_POST["gform_source_page_number_{$formId}"] ?? null;
+        $key = "gform_source_page_number_{$formId}";
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- GF verified the submission before this hook. The value is cast to int on the next line, which is stricter than any string sanitiser.
+        $raw = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : null;
 
         return is_numeric($raw) ? max(1, (int) $raw) : 1;
     }
@@ -175,14 +177,16 @@ final class Validator
         $formId = (int) ($form['id'] ?? 0);
 
         if (class_exists(GFFormDisplay::class)) {
-            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- GF's own dynamic-population payload, forwarded verbatim to GF's page resolver.
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- GF's own dynamic-population payload, handed to GF's page resolver exactly as GF reads it itself (GFFormDisplay::process_form() uses the raw, still-slashed value). Unslashing or sanitizing here would hand GF different data than it works with internally.
             $fieldValues = $_POST['gform_field_values'] ?? [];
 
             return (int) GFFormDisplay::get_target_page($form, $sourcePage, $fieldValues);
         }
 
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading GF's own paging input; absent means a single-page submit.
-        $raw = $_POST["gform_target_page_number_{$formId}"] ?? null;
+        $key = "gform_target_page_number_{$formId}";
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- GF verified the submission before this hook; absent means a single-page submit. The value is cast to int on the next line.
+        $raw = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : null;
 
         return is_numeric($raw) ? (int) $raw : 0;
     }

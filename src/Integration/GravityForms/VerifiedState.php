@@ -73,7 +73,7 @@ final class VerifiedState
      */
     private static function submissionId(): string
     {
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading GF's own submission id to key our per-submission record; GF verified the submission before this hook, and the value is shape-checked below.
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- GF verified the submission before this hook. The ctype_alnum() + length check below is stricter than any sanitiser: the value is rejected outright unless it matches the shape GF emits, and it is hashed before it reaches an option name.
         $raw = isset($_POST['gform_unique_id']) ? wp_unslash($_POST['gform_unique_id']) : '';
 
         if (! is_string($raw) || $raw === '' || strlen($raw) > 64 || ! ctype_alnum($raw)) {
