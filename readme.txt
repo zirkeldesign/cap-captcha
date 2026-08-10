@@ -106,11 +106,9 @@ The full, annotated list with examples is in README.md.
 == Changelog ==
 
 = 1.2.4 =
+* Fixed: the plugin only worked when Gravity Forms was active. Without it, the "Settings → Privacy CAPTCHA for Cap" page never appeared and the comments, login, registration and WooCommerce protection never ran. Gravity Forms and Contact Form 7 are optional again, as documented — each integration is skipped only if its own plugin is missing.
 * Improved: the plugin now runs from any copy of its source, so downloading it from GitHub works as well as installing from WordPress.org. Installable builds are attached to each GitHub release from now on.
 * Improved: smaller download — the plugin no longer ships a Composer autoloader it never needed.
-
-= 1.2.3 =
-* Fixed: the plugin only worked when Gravity Forms was active. Without it, the "Settings → Privacy CAPTCHA for Cap" page never appeared and the comments, login, registration and WooCommerce protection never ran. Gravity Forms and Contact Form 7 are optional again, as documented — each integration is skipped only if its own plugin is missing.
 
 = 1.2.2 =
 * Fixed: with an integration enabled but the plugin not yet configured (missing endpoint, site key, or secret), logins and other forms could be blocked with a "CAPTCHA verification failed" error. An unconfigured plugin now never blocks submissions — protection simply stays off (and admins still see the "not configured" notice) until the Cap settings are filled in.
