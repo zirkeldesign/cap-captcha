@@ -9,8 +9,9 @@ use ZirkelDesign\CapCaptcha\Settings;
 /**
  * Higher-level verifier used by the WordPress integrations. Pulls the Cap
  * token from `$_POST['cap-token']`, hands it to CapVerifier, and applies the
- * per-surface "fail-open" policy — but only when Cap could not be reached (or
- * there was nothing to verify), never when Cap actively rejected the token.
+ * per-surface "fail-open" policy — but only when Cap could not be reached,
+ * never when Cap actively rejected the token and never when no token was sent
+ * at all.
  */
 final class TokenVerifier
 {
@@ -50,7 +51,16 @@ final class TokenVerifier
         }
 
         if ($token === '') {
-            return $this->failOpen($context);
+            /**
+             * Whether a missing token blocks the submission. Fail-open covers a
+             * Cap server that cannot be reached — not a request that carries no
+             * proof at all — so an empty token is fail-closed. Surfaces that
+             * legitimately submit without our widget can opt out here.
+             *
+             * @param  bool  $required
+             * @param  string  $context
+             */
+            return ! (bool) apply_filters('cap_captcha_require_token', true, $context);
         }
 
         $result = $this->memo[$token] ??= (new CapVerifier(

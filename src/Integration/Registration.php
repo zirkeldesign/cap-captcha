@@ -8,6 +8,7 @@ use WP_Error;
 use ZirkelDesign\CapCaptcha\Asset\Enqueuer;
 use ZirkelDesign\CapCaptcha\Asset\Renderer;
 use ZirkelDesign\CapCaptcha\Settings;
+use ZirkelDesign\CapCaptcha\Verification\RequestContext;
 use ZirkelDesign\CapCaptcha\Verification\TokenVerifier;
 
 final class Registration implements Integration
@@ -70,6 +71,13 @@ final class Registration implements Integration
     public function verifyRegistration(WP_Error $errors): WP_Error
     {
         if (! $this->settings->isProtected('registration')) {
+            return $errors;
+        }
+
+        // register_new_user() is also reachable from REST, XML-RPC and CLI, none
+        // of which rendered our widget. `wp-submit` is wp-login.php's own submit
+        // input, present on every real registration POST.
+        if (! RequestContext::isFormPost('wp-submit')) {
             return $errors;
         }
 
