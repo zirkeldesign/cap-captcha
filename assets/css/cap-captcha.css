@@ -102,6 +102,19 @@
  * `.login`) to lift our selector to specificity 0,2,1, edging out
  * `.wp-core-ui .button` at 0,2,0.
  */
+/*
+ * wp-login.php stacks its form controls with no gap of their own, so a widget
+ * followed by the submit button sits flush against it. Only when something
+ * follows — the last element gets its spacing from the form itself.
+ *
+ * `:where(.login)` keeps this at 0,2,0 so a theme can override it with a plain
+ * class; nothing in WP core sets a margin on `.cap-captcha`, so we don't need
+ * the `body.login` weight the rules below rely on.
+ */
+:where(.login) .cap-captcha:not(:last-child) {
+    margin-block-end: 1rem;
+}
+
 body.login .cap-captcha--floating {
     clear: both;
     margin: 1em 0;
