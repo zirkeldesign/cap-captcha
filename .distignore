@@ -16,6 +16,7 @@
 phpstan.neon
 pint.json
 phpunit.xml
+phpunit.integration.xml
 composer.lock
 package.json
 bun.lock

@@ -9,6 +9,7 @@ use ZirkelDesign\CapCaptcha\Asset\Enqueuer;
 use ZirkelDesign\CapCaptcha\Asset\Renderer;
 use ZirkelDesign\CapCaptcha\Integration\GravityForms\Field;
 use ZirkelDesign\CapCaptcha\Integration\GravityForms\Validator;
+use ZirkelDesign\CapCaptcha\Integration\GravityForms\VerifiedState;
 use ZirkelDesign\CapCaptcha\Settings;
 use ZirkelDesign\CapCaptcha\Verification\TokenVerifier;
 
@@ -55,7 +56,9 @@ final class GravityForms implements Integration
         }
 
         $this->validator = new Validator($this->verifier);
-        add_filter('gform_validation', [$this->validator, 'validate']);
+        // Two args: GF passes the submission context (form-submit / api-submit
+        // / api-validate) and the validator only gates real web submissions.
+        add_filter('gform_validation', [$this->validator, 'validate'], 10, 2);
         add_filter('gform_entry_post_save', [$this, 'annotateFailOpen'], 10, 2);
 
         add_action('gform_enqueue_scripts', [$this, 'enqueueWidget'], 10, 2);
@@ -83,6 +86,10 @@ final class GravityForms implements Integration
      */
     public function annotateFailOpen(array $entry, array $form): array
     {
+        // The entry exists, so this submission is done with its cross-page
+        // verification record — one solve, one entry.
+        VerifiedState::forget((int) ($form['id'] ?? 0));
+
         if ($this->validator === null || ! $this->validator->wasLastFailOpen() || empty($entry['id'])) {
             return $entry;
         }
@@ -146,7 +153,7 @@ final class GravityForms implements Integration
             'formId' => (int) ($form['id'] ?? 0),
             'type' => 'cap_captcha',
             'label' => esc_html__('Privacy CAPTCHA for Cap', 'privacy-captcha-for-cap'),
-            'pageNumber' => self::lastPageNumber($form),
+            'pageNumber' => self::autoFieldPage($form),
         ]);
 
         $form['fields'][] = $field;
@@ -187,6 +194,27 @@ final class GravityForms implements Integration
         }
 
         return $max + 1;
+    }
+
+    /**
+     * Which page the synthetic field goes on. The last page carries the submit
+     * button, so the challenge is solved and consumed in the same request — no
+     * cross-page state needed. Filterable for forms whose last page can be
+     * hidden by conditional logic, where the widget would never render.
+     *
+     * @param  array<string, mixed>  $form
+     */
+    private static function autoFieldPage(array $form): int
+    {
+        /**
+         * Filters the page the auto-injected CAPTCHA field is placed on.
+         *
+         * @param  int  $page  Defaults to the form's last page.
+         * @param  array<string, mixed>  $form
+         */
+        $page = (int) apply_filters('cap_captcha_gf_field_page', self::lastPageNumber($form), $form);
+
+        return max(1, $page);
     }
 
     /**

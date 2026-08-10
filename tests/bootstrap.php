@@ -133,6 +133,69 @@ if (! function_exists('do_action')) {
     }
 }
 
+if (! defined('HOUR_IN_SECONDS')) {
+    define('HOUR_IN_SECONDS', 3600);
+}
+
+if (! function_exists('wp_salt')) {
+    function wp_salt(string $scheme = 'auth'): string
+    {
+        return 'test-salt-'.$scheme;
+    }
+}
+
+if (! function_exists('set_transient')) {
+    function set_transient(string $key, mixed $value, int $expiration = 0): bool
+    {
+        $GLOBALS['__cap_transients'][$key] = $value;
+
+        return true;
+    }
+}
+
+if (! function_exists('get_transient')) {
+    function get_transient(string $key): mixed
+    {
+        return $GLOBALS['__cap_transients'][$key] ?? false;
+    }
+}
+
+if (! function_exists('delete_transient')) {
+    function delete_transient(string $key): bool
+    {
+        unset($GLOBALS['__cap_transients'][$key]);
+
+        return true;
+    }
+}
+
+/**
+ * Reset the in-memory transient store between tests.
+ */
+function cap_reset_transients(): void
+{
+    $GLOBALS['__cap_transients'] = [];
+}
+
+if (! class_exists('GF_Field')) {
+    /**
+     * Minimal stand-in for Gravity Forms' field base class — enough for
+     * ZirkelDesign\CapCaptcha\Integration\GravityForms\Field to be constructed
+     * with a property bag, which is all the auto-injection path needs.
+     */
+    #[AllowDynamicProperties]
+    class GF_Field
+    {
+        /** @param array<string, mixed> $data */
+        public function __construct(array $data = [])
+        {
+            foreach ($data as $key => $value) {
+                $this->{$key} = $value;
+            }
+        }
+    }
+}
+
 if (! function_exists('esc_url_raw')) {
     function esc_url_raw(string $url): string
     {

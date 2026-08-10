@@ -75,7 +75,33 @@ it('skips core Login verification for WooCommerce My Account logins', function (
 });
 
 it('verifies a normal wp-login submission', function (): void {
+    $_POST['wp-submit'] = 'Log In';
     $user = new WP_User;
 
     expect(capLogin()->verifyLogin($user, 'pw'))->toBeInstanceOf(WP_Error::class);
+});
+
+it('skips core Login verification for programmatic sign-ins', function (): void {
+    // No wp-submit → wp_signon() from a membership plugin, XML-RPC or the REST
+    // API. Those never render our widget, so gating them would lock people out.
+    $user = new WP_User;
+
+    expect(capLogin()->verifyLogin($user, 'pw'))->toBe($user);
+});
+
+it('still skips checkout account creation with fail-open on and no token', function (): void {
+    // Regression guard for the empty-token fail-closed change: the
+    // woocommerce-register-nonce check, not fail-open, is what keeps checkout
+    // account creation working.
+    update_option(Settings::OPTION_KEY, [
+        'endpoint_base' => 'https://cap.example.com/',
+        'site_key' => 'sitekey',
+        'secret_key' => 'secret',
+        'fail_open' => true,
+        'integrations' => ['woocommerce' => true, 'woocommerce_registration' => true],
+    ]);
+    $settings = new Settings;
+    $woo = new WooCommerce($settings, new Renderer($settings), new Enqueuer($settings), new TokenVerifier($settings));
+
+    expect($woo->verifyRegistration(new WP_Error)->has_errors())->toBeFalse();
 });
