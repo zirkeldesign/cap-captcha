@@ -15,6 +15,7 @@
 phpstan.neon
 pint.json
 phpunit.xml
+phpunit.integration.xml
 composer.lock
 package.json
 bun.lock
@@ -37,6 +38,9 @@ dist
 README.md
 CHANGELOG.md
 AGENTS.md
+
+# Integration-test WordPress install
+.wp-integration
 
 # OS noise
 .DS_Store

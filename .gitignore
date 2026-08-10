@@ -3,3 +3,6 @@
 /dist/
 .DS_Store
 .phpunit.cache/
+
+# Integration-test WordPress install
+/.wp-integration/
