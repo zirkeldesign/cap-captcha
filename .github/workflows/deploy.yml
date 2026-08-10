@@ -22,11 +22,15 @@ jobs:
       - name: WordPress Plugin Deploy
         id: deploy
         uses: 10up/action-wordpress-plugin-deploy@stable
+        # generate-zip is a composite action *input*, so it has to go in `with:`.
+        # As an env var (which is how the old Docker-based action took it) it is
+        # silently ignored, no zip is built, and zip-path comes back empty.
+        with:
+          generate-zip: true
         env:
           SVN_USERNAME: ${{ secrets.WPORG_SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.WPORG_SVN_PASSWORD }}
           SLUG: privacy-captcha-for-cap
-          GENERATE_ZIP: true
           # The icon/banner live in .wordpress-org/assets. Without this the
           # action defaults ASSETS_DIR to .wordpress-org and copies the whole
           # assets/ subdir into SVN assets/ → nested assets/assets/ (broken art).
@@ -38,4 +42,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ZIP: ${{ steps.deploy.outputs.zip-path }}
-        run: gh release upload "${{ github.event.release.tag_name }}" "$ZIP" --clobber
+        run: |
+          if [ -z "$ZIP" ] || [ ! -f "$ZIP" ]; then
+            echo "::error::The deploy action produced no zip (zip-path='$ZIP'). Check that generate-zip is set under with:."
+            exit 1
+          fi
+          gh release upload "${{ github.event.release.tag_name }}" "$ZIP" --clobber
