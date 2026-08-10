@@ -3,9 +3,8 @@
 declare(strict_types=1);
 
 /*
- * The regression suite for the bug reported on REDACTED-SITE and
- * REDACTED-SITE: a Gravity Form with a preview step could be submitted without
- * solving the CAPTCHA.
+ * The regression suite for the bug reported in the field: a Gravity Form with
+ * a preview step could be submitted without solving the CAPTCHA.
  *
  * These run against the real GFFormDisplay::process_form(), so the paging
  * logic our validator mirrors is GF's own, not our reading of it.

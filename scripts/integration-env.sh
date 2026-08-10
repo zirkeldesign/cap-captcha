@@ -9,7 +9,7 @@
 # Gravity Forms is commercial and is NOT downloaded. Point CAP_GF_SOURCE at a
 # gravityforms plugin directory or zip you already have a licence for, e.g.
 #
-#   CAP_GF_SOURCE=~/wrk/sites/REDACTED-SITE/web/app/plugins/gravityforms \
+#   CAP_GF_SOURCE=/path/to/wp-content/plugins/gravityforms \
 #     ./scripts/integration-env.sh
 #
 # The preview-step form is a plain two-page Gravity Form (page break + an HTML
