@@ -69,6 +69,8 @@
     "format:test": "pint --test",
     "phpstan": "phpstan analyse --memory-limit=1G",
     "test": "pest",
+    "test:integration": "pest -c phpunit.integration.xml",
+    "test:integration:setup": "./scripts/integration-env.sh",
     "plugin-check": [
       "@php -r \"echo '🔍 Running Plugin Check...\\n';\"",
       "wp plugin check privacy-captcha-for-cap 2>/dev/null | grep -c '\\\"type\\\":\\\"ERROR\\\"' | xargs -I {} sh -c 'if [ {} -eq 0 ]; then echo \"✅ No ERRORs found\"; else echo \"❌ {} ERROR(s) found — run wp plugin check privacy-captcha-for-cap for details\" && exit 1; fi'"
