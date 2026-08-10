@@ -178,13 +178,23 @@ class Settings
             $wasm = self::WASM_BUNDLED;
         }
 
+        // A card whose plugin is inactive renders disabled, and disabled inputs
+        // are not submitted — so reading the POST alone would silently switch
+        // that integration off on the next save. Someone who deactivates
+        // Gravity Forms for an hour and saves an unrelated setting would find
+        // their forms unprotected once they reactivated it. Keep what was
+        // stored for anything the admin could not have touched.
+        $stored = $this->getAll();
+        $storedIntegrations = is_array($stored['integrations'] ?? null) ? $stored['integrations'] : [];
+        $descriptions = $this->integrationDescriptions();
+
         $integrations = [];
         $rawIntegrations = is_array($input['integrations'] ?? null) ? $input['integrations'] : [];
-        foreach (self::SURFACES as $id) {
-            $integrations[$id] = ! empty($rawIntegrations[$id]);
+        foreach ([...self::SURFACES, 'woocommerce'] as $id) {
+            $integrations[$id] = empty($descriptions[$id]['available'])
+                ? ! empty($storedIntegrations[$id])
+                : ! empty($rawIntegrations[$id]);
         }
-        // WooCommerce master toggle (gates the four woocommerce_* sub-surfaces).
-        $integrations['woocommerce'] = ! empty($rawIntegrations['woocommerce']);
 
         $cf7Mode = (string) ($input['cf7_mode'] ?? self::CF7_AUTOMATIC);
         if (! in_array($cf7Mode, [self::CF7_AUTOMATIC, self::CF7_MANUAL], true)) {
@@ -203,7 +213,6 @@ class Settings
         // Disabled inputs aren't submitted; keep the existing stored values so
         // toggling the wp-config constant on/off doesn't wipe whatever was saved
         // before. We don't trust the placeholder bullets that might leak through.
-        $stored = $this->getAll();
         $endpoint = $this->isEndpointConstantSet()
             ? (string) ($stored['endpoint_base'] ?? '')
             : esc_url_raw((string) ($input['endpoint_base'] ?? ''));
@@ -1025,7 +1034,10 @@ class Settings
             'fail_open' => false,
             'show_admin_notices' => true,
             'integrations' => [
-                'gravity_forms' => true,
+                // Off like every other surface. Defaulting this on is a leftover
+                // from when the plugin was Gravity Forms-only, and it showed the
+                // integration ticked on installs with no Gravity Forms at all.
+                'gravity_forms' => false,
                 'contact_form_7' => false,
                 'comments' => false,
                 'login' => false,
