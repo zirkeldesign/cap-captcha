@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.5] - Unreleased
+
+### Fixed
+- **Deactivating a form plugin could silently disable its protection.** A card whose plugin is inactive renders as a disabled checkbox, and disabled checkboxes are not submitted — but the sanitize callback read the POST alone, so saving *any* setting stored that integration as off. Deactivate Gravity Forms for an upgrade, save an unrelated setting, reactivate it, and the forms came back unprotected with the box unticked and no warning. Integrations whose plugin is unavailable now keep their stored value, matching how the `wp-config` constant-backed keys already behaved.
+- The Gravity Forms integration no longer defaults to **on**. That was a leftover from when the plugin was Gravity Forms-only, and it left the card ticked on installs with no Gravity Forms at all. It now defaults to off like every other surface.
+
 ## [1.2.4] - Unreleased
 
 ### Changed
