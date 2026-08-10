@@ -35,5 +35,27 @@ if (file_exists(CAP_CAPTCHA_DIR.'vendor/autoload.php')) {
 // whether its host plugin is present and skips the ones that aren't, so
 // comments, login, registration and WooCommerce work on their own.
 add_action('plugins_loaded', static function (): void {
+    // A copy taken straight from the Git repository has no vendor/ directory,
+    // so nothing is autoloadable. Say so instead of dying with a class-not-
+    // found fatal — the release zips from WordPress.org and the GitHub
+    // Releases page do include it.
+    if (! class_exists(Plugin::class)) {
+        add_action('admin_notices', static function (): void {
+            if (! current_user_can('activate_plugins')) {
+                return;
+            }
+
+            printf(
+                '<div class="notice notice-error"><p>%s</p></div>',
+                esc_html__(
+                    'Privacy CAPTCHA for Cap is missing its autoloader. Install the release zip from WordPress.org or the GitHub Releases page rather than a copy of the source repository — or run "composer install" inside the plugin folder.',
+                    'privacy-captcha-for-cap'
+                )
+            );
+        });
+
+        return;
+    }
+
     Plugin::boot();
 });
