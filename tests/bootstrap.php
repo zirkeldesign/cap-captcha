@@ -196,6 +196,20 @@ if (! class_exists('GF_Field')) {
     }
 }
 
+if (! function_exists('esc_url_raw')) {
+    function esc_url_raw(string $url): string
+    {
+        return filter_var($url, FILTER_SANITIZE_URL) ?: '';
+    }
+}
+
+if (! function_exists('is_admin')) {
+    function is_admin(): bool
+    {
+        return false;
+    }
+}
+
 if (! function_exists('wp_json_encode')) {
     function wp_json_encode(mixed $data, int $options = 0, int $depth = 512): string|false
     {

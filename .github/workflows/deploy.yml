@@ -5,7 +5,7 @@ on:
     types: [published]
 
 permissions:
-  contents: read
+  contents: write # attach the built zip to the release
 
 jobs:
   deploy:
@@ -15,23 +15,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          coverage: none
-
-      - name: Install production dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+      # No composer install: the plugin has no runtime dependencies and ships
+      # its own PSR-4 autoloader (autoload.php), so vendor/ is dev-only and
+      # excluded from the package via .distignore.
 
       - name: WordPress Plugin Deploy
+        id: deploy
         uses: 10up/action-wordpress-plugin-deploy@stable
+        # generate-zip is a composite action *input*, so it has to go in `with:`.
+        # As an env var (which is how the old Docker-based action took it) it is
+        # silently ignored, no zip is built, and zip-path comes back empty.
+        with:
+          generate-zip: true
         env:
           SVN_USERNAME: ${{ secrets.WPORG_SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.WPORG_SVN_PASSWORD }}
           SLUG: privacy-captcha-for-cap
-          GENERATE_ZIP: true
           # The icon/banner live in .wordpress-org/assets. Without this the
           # action defaults ASSETS_DIR to .wordpress-org and copies the whole
           # assets/ subdir into SVN assets/ → nested assets/assets/ (broken art).
           ASSETS_DIR: .wordpress-org/assets
+
+      # Without this the Releases page only offers GitHub's auto-generated
+      # source archive, which is not an installable plugin.
+      - name: Attach the built zip to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZIP: ${{ steps.deploy.outputs.zip-path }}
+        run: |
+          if [ -z "$ZIP" ] || [ ! -f "$ZIP" ]; then
+            echo "::error::The deploy action produced no zip (zip-path='$ZIP'). Check that generate-zip is set under with:."
+            exit 1
+          fi
+          gh release upload "${{ github.event.release.tag_name }}" "$ZIP" --clobber
