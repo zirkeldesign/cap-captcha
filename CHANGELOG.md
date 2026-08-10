@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.4] - Unreleased
+
+### Changed
+- **The plugin no longer needs Composer to run.** `composer.json` requires nothing but PHP itself, so `vendor/` only ever held Composer's autoloader mapping `ZirkelDesign\CapCaptcha\` onto `src/`. That mapping now lives in `autoload.php`, used whenever `vendor/autoload.php` is absent. Consequences: a plain copy of the repository runs as-is (so the 1.2.3 "missing autoloader" notice is gone — it can no longer happen), `vendor/` is excluded from the package via `.distignore`, and `deploy.yml` and the `dist` script drop their `composer install --no-dev` steps. The fallback keeps deferring to Composer when it is present, so a future runtime dependency still works — `AutoloadMappingTest` fails if one is added without revisiting the packaging.
+- Release builds are attached to the GitHub release. Previously the Releases page offered only GitHub's auto-generated source archive, which is not an installable plugin.
+
+### Fixed
+- `.distignore` excluded `dist/` but not the integration-test WordPress install, and the pattern for Composer's `vendor/` also matched `assets/js/vendor/`. Both were caught by building and inspecting the zip: the first inflated it from 92 KB to 28 MB, the second silently dropped `cap-widget.js` and would have shipped a plugin with no widget at all.
+
 ## [1.2.3] - Unreleased
 
 ### Fixed

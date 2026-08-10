@@ -12,6 +12,7 @@
 .version
 
 # Dev tooling
+/vendor
 phpstan.neon
 pint.json
 phpunit.xml
@@ -37,6 +38,9 @@ dist
 README.md
 CHANGELOG.md
 AGENTS.md
+
+# Integration-test WordPress install
+.wp-integration
 
 # OS noise
 .DS_Store
