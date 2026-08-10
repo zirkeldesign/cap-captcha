@@ -27,28 +27,17 @@ define('CAP_CAPTCHA_FILE', __FILE__);
 define('CAP_CAPTCHA_DIR', plugin_dir_path(__FILE__));
 define('CAP_CAPTCHA_URL', plugin_dir_url(__FILE__));
 
+// Composer's autoloader when it exists (dev checkouts), our own otherwise.
+// The plugin has no runtime dependencies, so the shipped zip carries neither.
 if (file_exists(CAP_CAPTCHA_DIR.'vendor/autoload.php')) {
     require_once CAP_CAPTCHA_DIR.'vendor/autoload.php';
+} else {
+    require_once CAP_CAPTCHA_DIR.'autoload.php';
 }
 
+// No form plugin is required to boot: Plugin::boot() asks each integration
+// whether its host plugin is present and skips the ones that aren't, so
+// comments, login, registration and WooCommerce work on their own.
 add_action('plugins_loaded', static function (): void {
-    if (! class_exists('GFForms') && ! class_exists('GFAPI')) {
-        add_action('admin_notices', static function (): void {
-            if (! current_user_can('activate_plugins')) {
-                return;
-            }
-
-            printf(
-                '<div class="notice notice-error"><p>%s</p></div>',
-                esc_html__(
-                    'Privacy CAPTCHA for Cap requires Gravity Forms to be installed and activated.',
-                    'privacy-captcha-for-cap'
-                )
-            );
-        });
-
-        return;
-    }
-
     Plugin::boot();
 });

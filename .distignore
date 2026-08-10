@@ -12,6 +12,7 @@
 .version
 
 # Dev tooling
+/vendor
 phpstan.neon
 pint.json
 phpunit.xml

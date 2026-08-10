@@ -20,6 +20,27 @@ All notable changes to this project will be documented in this file.
 - `gform_validation` is now registered with two arguments; `GFAPI::submit_form()` and validation-only API calls (`api-submit` / `api-validate`) are no longer gated, since no browser could have solved a challenge.
 - Failing Gravity Forms validation now sets `failed_validation_page`, so the visitor lands on the page that actually holds the widget.
 - The Login, Registration, and Comments integrations bail out on REST, XML-RPC, WP-CLI and cron requests, and on posts that lack the marker field of the form we render into (`wp-submit` / `comment_post_ID`). Without this the fail-closed change above would have broken XML-RPC logins, the REST comments endpoint, and third-party login forms.
+## [1.2.5] - Unreleased
+
+### Fixed
+- **Deactivating a form plugin could silently disable its protection.** A card whose plugin is inactive renders as a disabled checkbox, and disabled checkboxes are not submitted — but the sanitize callback read the POST alone, so saving *any* setting stored that integration as off. Deactivate Gravity Forms for an upgrade, save an unrelated setting, reactivate it, and the forms came back unprotected with the box unticked and no warning. Integrations whose plugin is unavailable now keep their stored value, matching how the `wp-config` constant-backed keys already behaved.
+- The Gravity Forms integration no longer defaults to **on**. That was a leftover from when the plugin was Gravity Forms-only, and it left the card ticked on installs with no Gravity Forms at all. It now defaults to off like every other surface.
+
+## [1.2.4] - Unreleased
+
+### Changed
+- **The plugin no longer needs Composer to run.** `composer.json` requires nothing but PHP itself, so `vendor/` only ever held Composer's autoloader mapping `ZirkelDesign\CapCaptcha\` onto `src/`. That mapping now lives in `autoload.php`, used whenever `vendor/autoload.php` is absent. Consequences: a plain copy of the repository runs as-is (so the 1.2.3 "missing autoloader" notice is gone — it can no longer happen), `vendor/` is excluded from the package via `.distignore`, and `deploy.yml` and the `dist` script drop their `composer install --no-dev` steps. The fallback keeps deferring to Composer when it is present, so a future runtime dependency still works — `AutoloadMappingTest` fails if one is added without revisiting the packaging.
+- Release builds are attached to the GitHub release. Previously the Releases page offered only GitHub's auto-generated source archive, which is not an installable plugin.
+
+### Fixed
+- Refreshed the vendored `pako_inflate.min.js`, which had been left at 2.1.0 when `9d04c10` bumped the pinned dependency to 2.2.0. The shipped copy now matches `package.json` again, as `bun run build:check` requires.
+- `.distignore` excluded `dist/` but not the integration-test WordPress install, and the pattern for Composer's `vendor/` also matched `assets/js/vendor/`. Both were caught by building and inspecting the zip: the first inflated it from 92 KB to 28 MB, the second silently dropped `cap-widget.js` and would have shipped a plugin with no widget at all.
+
+## [1.2.3] - Unreleased
+
+### Fixed
+- **The plugin did nothing unless Gravity Forms was active** ([#11](https://github.com/zirkeldesign/privacy-captcha-for-cap/issues/11)). The entry file gated `Plugin::boot()` behind `class_exists('GFForms') || class_exists('GFAPI')` — a leftover from before `01bc7e6` rebuilt the Gravity Forms-only plugin into a multi-surface one. Without Gravity Forms nothing booted: no **Settings → Privacy CAPTCHA for Cap** page, and no comments, login, registration or WooCommerce protection either. `Plugin::boot()` has always asked each integration whether its host plugin is present (`Integration::isAvailable()`), so the outer gate was both wrong and redundant; it and its "requires Gravity Forms" admin notice are gone. This matches what `readme.txt` already documented: *"Gravity Forms 2.5+ (only if you enable the Gravity Forms integration)"*.
+- A copy installed straight from the source repository (which ships no `vendor/`, so nothing is autoloadable) now shows an explanatory admin notice instead of dying with a class-not-found fatal. The release zips from WordPress.org and the GitHub Releases page are unaffected — they bundle the autoloader.
 
 ## [1.2.2] - Unreleased
 
