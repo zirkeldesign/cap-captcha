@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.1] - Unreleased
+
+### Fixed
+- **Fatal error on Gravity Forms 3.0 and newer.** GF 3.0 made both parameters of `GF_Field::get_field_label()` optional; our override still declared them as required, which PHP rejects as an incompatible signature — every request died with *"Declaration of … must be compatible with GF_Field::get_field_label(\$force_frontend_label = true, \$value = '')"*. Both parameters now carry GF 3's defaults, which is equally valid on GF 2.x (it always passes both arguments). The parent's return value is cast, since `GF_Field::get_field_label()` can return a null label. `php-stubs/gravity-forms-stubs` has no 3.x release, so PHPStan cannot see this drift — `tests/Unit/GfFieldSignatureTest.php` pins the contract instead, and the `GF_Field` stand-in in `tests/bootstrap.php` now mirrors the GF 3 signature so a regression fails to load in the test suite as well.
+
 ## [1.3.0] - Unreleased
 
 ### Fixed

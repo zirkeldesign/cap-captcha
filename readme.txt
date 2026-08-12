@@ -4,7 +4,7 @@ Tags: captcha, spam, proof-of-work, comments, woocommerce
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.3
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -111,6 +111,9 @@ Yes. The main ones:
 The full, annotated list with examples is in README.md.
 
 == Changelog ==
+
+= 1.3.1 =
+* Fixed: a fatal error that took the site down when the plugin ran alongside Gravity Forms 3.0 or newer. If you use Gravity Forms 3.x, please update.
 
 = 1.3.0 =
 * Fixed: multi-page Gravity Forms — including forms with a preview step — now work correctly. Previously the CAPTCHA could not be completed on the final page: depending on your fail-open setting the form was either impossible to send, or could be sent without solving the CAPTCHA at all.

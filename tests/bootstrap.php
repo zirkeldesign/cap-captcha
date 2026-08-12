@@ -182,16 +182,37 @@ if (! class_exists('GF_Field')) {
      * Minimal stand-in for Gravity Forms' field base class — enough for
      * ZirkelDesign\CapCaptcha\Integration\GravityForms\Field to be constructed
      * with a property bag, which is all the auto-injection path needs.
+     *
+     * The method signatures mirror Gravity Forms 3.0 so that an incompatible
+     * override in our field class fails to load here too, rather than only on
+     * a live GF 3.x site.
      */
     #[AllowDynamicProperties]
     class GF_Field
     {
+        /** @var string|null */
+        public $label;
+
         /** @param array<string, mixed> $data */
         public function __construct(array $data = [])
         {
             foreach ($data as $key => $value) {
                 $this->{$key} = $value;
             }
+        }
+
+        public function is_form_editor(): bool
+        {
+            return false;
+        }
+
+        /**
+         * @param  bool  $force_frontend_label
+         * @param  int|string  $value
+         */
+        public function get_field_label($force_frontend_label = true, $value = ''): string
+        {
+            return (string) $this->label;
         }
     }
 }

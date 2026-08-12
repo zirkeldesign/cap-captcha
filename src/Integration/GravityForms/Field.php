@@ -146,12 +146,17 @@ final class Field extends GF_Field
      * Suppress the front-end `<label>` — the Cap widget provides its own label.
      * The admin label remains visible inside the form editor.
      *
+     * Both parameters must stay optional: Gravity Forms 3.0 made them optional
+     * on GF_Field, and a child declaring them as required is a fatal signature
+     * error. The defaults are harmless on GF 2.x, which always passes both.
+     *
+     * @param  bool  $force_frontend_label
      * @param  int|string  $value
      */
-    public function get_field_label($force_frontend_label, $value): string
+    public function get_field_label($force_frontend_label = true, $value = ''): string
     {
         if ($this->is_form_editor()) {
-            return parent::get_field_label($force_frontend_label, $value);
+            return (string) parent::get_field_label($force_frontend_label, $value);
         }
 
         return '';
