@@ -24,6 +24,7 @@ bun.lockb
 node_modules
 
 # Source-only / build inputs
+bin
 scripts
 tests
 .phpunit.cache

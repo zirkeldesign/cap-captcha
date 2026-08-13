@@ -90,6 +90,7 @@ Beyond the on/off surface toggle, the two form plugins offer placement control (
 | `composer phpstan` | Static analysis (level 6) |
 | `composer format` | Apply Pint formatting |
 | `composer format:test` | Check Pint formatting |
+| `composer pcp` | Build the zip and run WordPress.org Plugin Check against it on a throwaway WP install (`WP_VERSION=7.1-RC3 composer pcp` to target a specific core) |
 | `bun run build` | Copy vendored cap-widget + WASM into `assets/` |
 | `bun run build:check` | Fail if vendored assets are out of date |
 | `bun run translate` | Regenerate POT + update PO files + compile MO |

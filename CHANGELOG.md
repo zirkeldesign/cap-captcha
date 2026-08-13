@@ -2,12 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.3.1] - Unreleased
+## [1.3.2] - 2026-08-13
+
+### Changed
+
+- **`Tested up to: 7.1`.** Verified against WordPress 7.1-RC3, not asserted: Plugin Check on the built zip reports 0 errors and 0 warnings, the Gravity Forms integration suite passes against real Gravity Forms 2.10.5 on 7.1, and the widget still renders on `wp-login.php`, the registration form and the comment form — the `login_footer` script-module printing (see `Asset/Enqueuer`) being the fragile part, since `WP_Script_Modules::add_hooks()` does not cover wp-login. None of the 7.1 breaking changes apply: the plugin registers no blocks, ships no editor JS, has no `@wordpress/*` dependency, touches neither the media pipeline nor the admin toolbar, and its only jQuery use is core `jQuery` inside the Gravity Forms field-settings panel — not jQuery UI.
+
+### Added
+
+- `bin/plugin-check.sh` (`composer pcp`) — builds the distribution zip and runs the real WordPress.org Plugin Check against **the zip** on a throwaway SQLite-backed WordPress, failing on any error or warning. Replaces the old `composer plugin-check`, which checked whatever happened to be active in an existing install and so never saw the files the dist script adds or `.distignore` removes. `WP_VERSION=7.1-RC3 composer pcp` targets a specific core, so a release candidate can be tested before readme.txt claims compatibility with it.
+
+## [1.3.1] - 2026-08-12
 
 ### Fixed
 - **Fatal error on Gravity Forms 3.0 and newer.** GF 3.0 made both parameters of `GF_Field::get_field_label()` optional; our override still declared them as required, which PHP rejects as an incompatible signature — every request died with *"Declaration of … must be compatible with GF_Field::get_field_label(\$force_frontend_label = true, \$value = '')"*. Both parameters now carry GF 3's defaults, which is equally valid on GF 2.x (it always passes both arguments). The parent's return value is cast, since `GF_Field::get_field_label()` can return a null label. `php-stubs/gravity-forms-stubs` has no 3.x release, so PHPStan cannot see this drift — `tests/Unit/GfFieldSignatureTest.php` pins the contract instead, and the `GF_Field` stand-in in `tests/bootstrap.php` now mirrors the GF 3 signature so a regression fails to load in the test suite as well.
 
-## [1.3.0] - Unreleased
+## [1.3.0] - 2026-08-10
 
 ### Fixed
 - **Multi-page Gravity Forms were unprotected or unsubmittable.** `gform_validation` fires on every page transition, but `cap-token` is a plain POST field written into the form by `<cap-widget>` — not a form value — and Gravity Forms re-renders the whole form (all pages, inactive ones hidden) on each transition, so the solved token never survives to the final submit. `Validator` demanded a proof on every page regardless. On forms with a preview step (e.g. the Gravity Wiz *GP Preview Submission* perk, which is a page break plus `{all_fields}` on the last page) the CAPTCHA could therefore never be satisfied: fail-closed made the form unsubmittable, fail-open made the CAPTCHA decorative. `Validator` is now page-aware — it requires the proof exactly when the page holding the field was submitted, or on the final submit — and `VerifiedState` carries an earlier page's verification across the rest of the submission via a short-lived transient keyed on GF's `gform_unique_id`.
@@ -25,7 +35,7 @@ All notable changes to this project will be documented in this file.
 - `gform_validation` is now registered with two arguments; `GFAPI::submit_form()` and validation-only API calls (`api-submit` / `api-validate`) are no longer gated, since no browser could have solved a challenge.
 - Failing Gravity Forms validation now sets `failed_validation_page`, so the visitor lands on the page that actually holds the widget.
 - The Login, Registration, and Comments integrations bail out on REST, XML-RPC, WP-CLI and cron requests, and on posts that lack the marker field of the form we render into (`wp-submit` / `comment_post_ID`). Without this the fail-closed change above would have broken XML-RPC logins, the REST comments endpoint, and third-party login forms.
-## [1.2.5] - Unreleased
+## [1.2.5] - 2026-08-10 (never tagged; shipped as part of 1.3.0)
 
 ### Fixed
 - **Deactivating a form plugin could silently disable its protection.** A card whose plugin is inactive renders as a disabled checkbox, and disabled checkboxes are not submitted — but the sanitize callback read the POST alone, so saving *any* setting stored that integration as off. Deactivate Gravity Forms for an upgrade, save an unrelated setting, reactivate it, and the forms came back unprotected with the box unticked and no warning. Integrations whose plugin is unavailable now keep their stored value, matching how the `wp-config` constant-backed keys already behaved.
